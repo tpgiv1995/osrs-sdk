@@ -743,6 +743,7 @@ export class Player extends Unit {
     super.dead();
     this.perceivedLocation = this.location;
     this.destinationLocation = this.location;
+    Trainer.notifyPlayerDeath();
   }
 
   // Rotation Code

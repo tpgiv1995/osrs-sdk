@@ -10,6 +10,8 @@ import { MapController } from "./MapController";
 
 export type TrainerSnapshot = Readonly<{
   player: Player | null;
+  /** True from the player's death until the next reset. */
+  playerDead: boolean;
   region: Region;
   settings: SettingsSnapshot;
   world: World;
@@ -47,6 +49,9 @@ export class TrainerInstance {
   private listeners = new Set<() => void>();
   private snapshot: TrainerSnapshot;
   private unsubscribeSettings: () => void;
+  private unsubscribeDeath: () => void;
+  private unsubscribeReset: () => void;
+  private playerDead = false;
   private loadPromise: Promise<void> | null = null;
   private loadingListeners = new Set<(state: TrainerLoadingState) => void>();
   private loadingState: TrainerLoadingState = Object.freeze({
@@ -65,6 +70,15 @@ export class TrainerInstance {
     this.world.addRegion(region);
     this.snapshot = this.createSnapshot();
     this.unsubscribeSettings = Settings.subscribe(() => this.notifyChanged());
+    this.unsubscribeDeath = Trainer.onPlayerDeath(() => {
+      this.playerDead = true;
+      this.notifyChanged();
+    });
+    this.unsubscribeReset = Trainer.onReset(() => {
+      this.playerDead = false;
+      this.player = Trainer.player;
+      this.notifyChanged();
+    });
   }
 
   mount(canvas: HTMLCanvasElement, resizeTarget: Element) {
@@ -113,6 +127,7 @@ export class TrainerInstance {
   reset() {
     Trainer.reset();
     this.player = Trainer.player;
+    this.playerDead = false;
     this.notifyChanged();
     return this.player;
   }
@@ -130,6 +145,8 @@ export class TrainerInstance {
     if (!this.world.isPaused) this.world.stopTicking();
     Viewport.viewport?.dispose();
     this.unsubscribeSettings();
+    this.unsubscribeDeath();
+    this.unsubscribeReset();
     this.listeners.clear();
     this.loadingListeners.clear();
   }
@@ -137,6 +154,7 @@ export class TrainerInstance {
   private createSnapshot(): TrainerSnapshot {
     return Object.freeze({
       player: this.player,
+      playerDead: this.playerDead,
       region: this.region,
       settings: Settings.getSnapshot(),
       world: this.world,

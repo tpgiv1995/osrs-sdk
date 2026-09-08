@@ -12,6 +12,8 @@ export const SETTINGS_STORAGE_KEY = "osrs-sdk:settings";
 
 export type SettingsState = {
   antiDrag: number;
+  /** Multiplier on mouse camera rotation speed. 1 = upstream default. */
+  cameraSensitivity: number;
   combat_key: string;
   displayFeedback: boolean;
   displayMobLoS: boolean;
@@ -71,6 +73,7 @@ export class Settings {
   static displayFeedback: boolean;
   static metronome: boolean;
   static modernLayout = true;
+  static cameraSensitivity = 0.65;
   static antiDrag: number;
 
   static inventory_key: string;
@@ -179,6 +182,7 @@ export class Settings {
   private static toState(): SettingsState {
     return {
       antiDrag: Settings.antiDrag,
+      cameraSensitivity: Settings.cameraSensitivity,
       combat_key: Settings.combat_key,
       displayFeedback: Settings.displayFeedback,
       displayMobLoS: Settings.displayMobLoS,
@@ -218,6 +222,7 @@ function createDefaults(): SettingsState {
   const mobile = Settings.mobileCheck();
   return {
     antiDrag: 5,
+    cameraSensitivity: 0.65,
     combat_key: "F1",
     displayFeedback: true,
     displayMobLoS: false,
@@ -264,6 +269,7 @@ const legacyStorage: SettingsStorage<SettingsState> = {
     const menuVisible = window.localStorage.getItem("menuVisible");
     return {
       antiDrag: parseInt(window.localStorage.getItem("antiDrag") ?? "5"),
+      cameraSensitivity: defaults.cameraSensitivity,
       combat_key: window.localStorage.getItem("combat_key") || defaults.combat_key,
       displayFeedback: window.localStorage.getItem("displayFeedback") !== "false",
       displayMobLoS: legacyBoolean("displayMobLoS", false),

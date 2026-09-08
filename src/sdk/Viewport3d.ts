@@ -185,8 +185,9 @@ export class Viewport3d implements ViewportDelegate {
       !Viewport.viewport.contextMenu.isActive &&
       Viewport.viewport.clickController?.isRightDragging;
     if (!middle && !right) return;
-    this.yaw.rotation.y -= e.movementX * ROTATE_MULT;
-    const v = this.pitch.rotation.x - e.movementY * ROTATE_MULT;
+    const rotate = ROTATE_MULT * (Settings.cameraSensitivity || 1);
+    this.yaw.rotation.y -= e.movementX * rotate;
+    const v = this.pitch.rotation.x - e.movementY * rotate;
     if (v > MIN_PITCH && v < MAX_PITCH) {
       this.pitch.rotation.x = v;
     }

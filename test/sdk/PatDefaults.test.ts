@@ -19,6 +19,10 @@ describe("Pat's keybind defaults", () => {
     expect(Settings.modernLayout).toBe(true);
   });
 
+  test("camera sensitivity is turned down from upstream", () => {
+    expect(Settings.cameraSensitivity).toBe(0.65);
+  });
+
   test("defaults survive a persist and reload cycle", () => {
     Settings.persistToStorage();
     const stored = JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY));

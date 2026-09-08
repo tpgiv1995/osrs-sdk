@@ -28,5 +28,24 @@ export class Trainer {
 
     static reset() {
         Trainer._player.region.reset();
+        Trainer.resetListeners.forEach((listener) => listener());
+    }
+
+    // Lightweight events so UI shells can react to the fight ending without polling.
+    private static deathListeners = new Set<() => void>();
+    private static resetListeners = new Set<() => void>();
+
+    static onPlayerDeath(listener: () => void) {
+        Trainer.deathListeners.add(listener);
+        return () => Trainer.deathListeners.delete(listener);
+    }
+
+    static onReset(listener: () => void) {
+        Trainer.resetListeners.add(listener);
+        return () => Trainer.resetListeners.delete(listener);
+    }
+
+    static notifyPlayerDeath() {
+        Trainer.deathListeners.forEach((listener) => listener());
     }
 }
