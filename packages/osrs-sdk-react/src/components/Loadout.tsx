@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Dropdown } from "./Dropdown";
 import type { Item, Loadout as LoadoutData, LoadoutItemId, UnitEquipment } from "osrs-sdk";
 
@@ -89,6 +89,16 @@ function ItemSlot({
   substituteItemIds: number[];
 }) {
   const item = itemId === null ? undefined : registry?.get(itemId);
+  // With a whole bank registered, the list needs a filter to be usable.
+  const [query, setQuery] = useState("");
+  const visibleSubstitutes = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return substituteItemIds
+      .map((id) => ({ id, name: registry?.get(id)?.itemName ?? "" }))
+      .filter(({ name }) => name && (!needle || name.toLowerCase().includes(needle)))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(({ id }) => id);
+  }, [query, registry, substituteItemIds]);
 
   const trigger = item ? (
     <img
@@ -108,10 +118,21 @@ function ItemSlot({
       menuStyle={{
         display: "grid",
         gridTemplateColumns: "24px 1fr",
-        width: slotSize * 2,
+        width: slotSize * 4,
+        maxHeight: 360,
+        overflowY: "auto",
       }}
       trigger={trigger}
     >
+      <input
+        type="text"
+        placeholder={`Search ${substituteItemIds.length} items...`}
+        value={query}
+        autoFocus
+        onClick={(event) => event.stopPropagation()}
+        onChange={(event) => setQuery(event.currentTarget.value)}
+        style={{ gridColumn: "1 / -1", margin: 2, padding: "4px 6px", fontSize: 13, width: "auto" }}
+      />
       {allowEmpty && (
         <div
           onClick={() => onItemSelect(null)}
@@ -128,7 +149,7 @@ function ItemSlot({
           <span>Empty</span>
         </div>
       )}
-      {substituteItemIds.map((substituteId) => {
+      {visibleSubstitutes.map((substituteId) => {
         const substitute = registry?.get(substituteId);
         if (!substitute) return null;
         return (

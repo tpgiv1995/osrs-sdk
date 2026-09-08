@@ -6,6 +6,7 @@ import type { Item } from "../sdk/Item";
 import * as Equipment from "./equipment";
 import * as Items from "./items";
 import * as Weapons from "./weapons";
+import * as Bank from "./generated/BankItems";
 
 type ItemConstructor = new () => Item;
 
@@ -15,6 +16,7 @@ const itemConstructors = Object.values({
   ...Equipment,
   ...Items,
   ...Weapons,
+  ...Bank,
 }) as ItemConstructor[];
 
 const loadoutItems = itemConstructors
