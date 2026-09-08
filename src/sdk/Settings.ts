@@ -6,6 +6,7 @@ import { Location } from "./Location";
 import type { Loadout } from "./Loadout";
 import { DeserializePlayerStats, PlayerStats } from "./PlayerStats";
 import { createJsonSettingsStorage, createSettingsStore, SettingsStorage } from "./SettingsStore";
+import { isValidPrayerLayout, PAT_PRAYER_LAYOUT, PrayerLayout } from "./controlpanels/PrayerLayouts";
 
 const WASD = ["w", "a", "s", "d"];
 export const SETTINGS_STORAGE_KEY = "osrs-sdk:settings";
@@ -38,6 +39,8 @@ export type SettingsState = {
   playsAreaAudio: boolean;
   playsAudio: boolean;
   prayer_key: string;
+  /** Custom prayer book slots (30 names, "" = empty) or null for the stock order. */
+  prayerLayout: PrayerLayout | null;
   renderFps: number;
   rotated: string;
   smoothCacheAnimations: boolean;
@@ -80,6 +83,7 @@ export class Settings {
   static spellbook_key: string;
   static equipment_key: string;
   static prayer_key: string;
+  static prayerLayout: PrayerLayout | null = null;
   static combat_key: string;
   static tile_markers: Location[];
 
@@ -204,6 +208,7 @@ export class Settings {
       playsAreaAudio: Settings.playsAreaAudio,
       playsAudio: Settings.playsAudio,
       prayer_key: Settings.prayer_key,
+      prayerLayout: isValidPrayerLayout(Settings.prayerLayout) ? Settings.prayerLayout : null,
       renderFps: Settings.renderFps,
       rotated: Settings.rotated,
       smoothCacheAnimations: Settings.smoothCacheAnimations,
@@ -244,6 +249,7 @@ function createDefaults(): SettingsState {
     playsAreaAudio: false,
     playsAudio: false,
     prayer_key: "F3",
+    prayerLayout: [...PAT_PRAYER_LAYOUT],
     renderFps: 60,
     rotated: "south",
     smoothCacheAnimations: true,
@@ -291,6 +297,7 @@ const legacyStorage: SettingsStorage<SettingsState> = {
       playsAreaAudio: legacyBoolean("playsAreaAudio", false),
       playsAudio: legacyBoolean("playsAudio", false),
       prayer_key: window.localStorage.getItem("prayer_key") || defaults.prayer_key,
+      prayerLayout: defaults.prayerLayout,
       renderFps: parseInt(window.localStorage.getItem("renderFps") || "60", 10) || 60,
       rotated: window.localStorage.getItem("rotated") || defaults.rotated,
       smoothCacheAnimations: window.localStorage.getItem("smoothCacheAnimations") !== "false",

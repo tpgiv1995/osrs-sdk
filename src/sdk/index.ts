@@ -37,6 +37,7 @@ export * from './ui/Button';
 export * from './controlpanels/AccountControls';
 export * from './controlpanels/AncientsSpellbookControls';
 export * from './controlpanels/BaseControls';
+export * from './controlpanels/PrayerLayouts';
 export * from './controlpanels/ClanChatControls';
 export * from './controlpanels/CombatControls';
 export * from './controlpanels/EmotesControls';

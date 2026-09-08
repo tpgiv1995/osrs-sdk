@@ -1,5 +1,10 @@
 import PrayerPanel from "../../assets/images/panels/prayer.png";
+import PrayerPanelBlank from "../../assets/images/panels/prayer_blank.png";
 import PrayerTab from "../../assets/images/tabs/prayer.png";
+import { ImageLoader } from "../utils/ImageLoader";
+import type { BasePrayer } from "../BasePrayer";
+import { PRAYER_BOOK_ICONS } from "./PrayerBookIcons";
+import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS } from "./PrayerLayouts";
 import { BaseControls } from "./BaseControls";
 import { Settings } from "../Settings";
 import { ControlPanelController } from "../ControlPanelController";
@@ -7,6 +12,32 @@ import { Trainer } from "../Trainer";
 
 export class PrayerControls extends BaseControls {
   hasQuickPrayersActivated = false;
+  blankPanelImage: HTMLImageElement = ImageLoader.createImage(PrayerPanelBlank);
+  private bookIcons: Record<string, HTMLImageElement> = Object.keys(PRAYER_BOOK_ICONS).reduce(
+    (icons, name) => {
+      icons[name] = ImageLoader.createImage(PRAYER_BOOK_ICONS[name]);
+      return icons;
+    },
+    {} as Record<string, HTMLImageElement>,
+  );
+
+  /** The prayer in each of the 30 book slots, following Settings.prayerLayout when set. */
+  slotPrayers(): (BasePrayer | null)[] {
+    const prayers = Trainer.player.prayerController.prayers;
+    const layout = Settings.prayerLayout;
+    if (!isValidPrayerLayout(layout)) return prayers;
+    return layout.map((name) => (name ? prayers.find((prayer) => prayer.name === name) ?? null : null));
+  }
+
+  private prayerAt(x: number, y: number): BasePrayer | null {
+    const scale = Settings.controlPanelScale;
+    const gridX = x / scale - 14;
+    const gridY = y / scale - 22;
+    if (gridX < 0 || gridY < 0) return null;
+    const column = Math.floor(gridX / 35);
+    if (column >= PRAYER_LAYOUT_COLUMNS) return null;
+    return this.slotPrayers()[Math.floor(gridY / 35) * PRAYER_LAYOUT_COLUMNS + column] ?? null;
+  }
 
   get panelImageReference() {
     return PrayerPanel;
@@ -40,16 +71,7 @@ export class PrayerControls extends BaseControls {
   }
 
   panelClickDown(x: number, y: number) {
-    const scale = Settings.controlPanelScale;
-
-    x = x / scale;
-    y = y / scale;
-
-    const gridX = x - 14;
-    const gridY = y - 22;
-
-    const clickedPrayer =
-      Trainer.player.prayerController.prayers[Math.floor(gridY / 35) * 5 + Math.floor(gridX / 35)];
+    const clickedPrayer = this.prayerAt(x, y);
     if (clickedPrayer && Trainer.player.currentStats.prayer > 0) {
       clickedPrayer.toggle(Trainer.player);
 
@@ -60,10 +82,7 @@ export class PrayerControls extends BaseControls {
   }
 
   override hoverAction(x: number, y: number) {
-    const scale = Settings.controlPanelScale;
-    const gridX = x / scale - 14;
-    const gridY = y / scale - 22;
-    const prayer = Trainer.player.prayerController.prayers[Math.floor(gridY / 35) * 5 + Math.floor(gridX / 35)];
+    const prayer = this.prayerAt(x, y);
     if (!prayer) return null;
     return [
       { text: prayer.isLit ? "Deactivate " : "Activate ", fillStyle: "white" },
@@ -76,12 +95,25 @@ export class PrayerControls extends BaseControls {
   }
 
   draw(context, ctrl: ControlPanelController, x: number, y: number) {
-    super.draw(context, ctrl, x, y);
     const scale = Settings.controlPanelScale;
+    const customLayout = isValidPrayerLayout(Settings.prayerLayout);
+    if (customLayout) {
+      context.drawImage(this.blankPanelImage, x, y, 204 * scale, 275 * scale);
+    } else {
+      super.draw(context, ctrl, x, y);
+    }
 
-    Trainer.player.prayerController.prayers.forEach((prayer, index) => {
-      const x2 = index % 5;
-      const y2 = Math.floor(index / 5);
+    this.slotPrayers().forEach((prayer, index) => {
+      if (!prayer) return;
+      const x2 = index % PRAYER_LAYOUT_COLUMNS;
+      const y2 = Math.floor(index / PRAYER_LAYOUT_COLUMNS);
+
+      if (customLayout) {
+        const icon = this.bookIcons[prayer.name];
+        if (icon) {
+          context.drawImage(icon, x + Math.round(10 + x2 * 36.8) * scale, y + (16 + y2 * 37) * scale, 37 * scale, 37 * scale);
+        }
+      }
 
       if (prayer.isLit) {
         context.beginPath();
