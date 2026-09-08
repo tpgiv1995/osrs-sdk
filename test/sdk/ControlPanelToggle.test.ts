@@ -17,19 +17,23 @@ describe("panel hotkeys toggle like RuneLite's modern layout", () => {
     ControlPanelController.controller = controller;
   });
 
-  test("pressing the inventory key opens the inventory", () => {
-    press("F2");
+  test("the inventory is open on start, like OSRS", () => {
     expect(controller.selectedControl).toBe(ControlPanelController.controls.INVENTORY);
   });
 
+  test("pressing the prayer key opens prayer", () => {
+    press("F3");
+    expect(controller.selectedControl).toBe(ControlPanelController.controls.PRAYER);
+  });
+
   test("pressing it again closes the panel", () => {
-    press("F2");
+    press("F3");
     expect(controller.selectedControl).toBeNull();
   });
 
   test("a different key switches panels instead of closing", () => {
-    press("F2");
     press("F3");
-    expect(controller.selectedControl).toBe(ControlPanelController.controls.PRAYER);
+    press("F2");
+    expect(controller.selectedControl).toBe(ControlPanelController.controls.INVENTORY);
   });
 });

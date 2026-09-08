@@ -102,7 +102,8 @@ export class ControlPanelController {
     ];
     this.controls = Settings.mobileCheck() ? this.mobileControls : this.desktopControls;
 
-    this.selectedControl = ControlPanelController.controls.PRAYER;
+    // OSRS opens on the inventory tab.
+    this.selectedControl = ControlPanelController.controls.INVENTORY;
     document.addEventListener("keydown", (event) => {
       if (Settings.is_keybinding) {
         return;

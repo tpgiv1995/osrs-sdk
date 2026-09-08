@@ -6,6 +6,7 @@ import { ContextMenu } from "./ContextMenu";
 import { World } from "./World";
 import { ControlPanelController } from "./ControlPanelController";
 import { ChatStrip } from "./ChatStrip";
+import { Chrome } from "./Chrome";
 import { MapController } from "./MapController";
 import { XpDropController } from "./XpDropController";
 import { ImageLoader } from "./utils/ImageLoader";
@@ -216,7 +217,10 @@ export class Viewport {
 
     // draw control panel
     ControlPanelController.controller.draw(this.context);
-    ChatStrip.draw(this.context, this.width, this.height, ControlPanelController.controller.getTabScale());
+    {
+      const { width: chromeWidth, height: chromeHeight } = Chrome.size();
+      ChatStrip.draw(this.context, chromeWidth, chromeHeight, ControlPanelController.controller.getTabScale());
+    }
     XpDropController.controller.draw(
       this.context,
       width - 140 - MapController.controller.width,
