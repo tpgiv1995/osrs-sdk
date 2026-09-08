@@ -6,7 +6,7 @@ import { Location } from "./Location";
 import type { Loadout } from "./Loadout";
 import { DeserializePlayerStats, PlayerStats } from "./PlayerStats";
 import { createJsonSettingsStorage, createSettingsStore, SettingsStorage } from "./SettingsStore";
-import { isValidPrayerLayout, PAT_PRAYER_LAYOUT, PrayerLayout } from "./controlpanels/PrayerLayouts";
+import { isValidPrayerLayout, V3_PRAYER_LAYOUT, PrayerLayout } from "./controlpanels/PrayerLayouts";
 
 const WASD = ["w", "a", "s", "d"];
 export const SETTINGS_STORAGE_KEY = "osrs-sdk:settings";
@@ -236,7 +236,7 @@ function createDefaults(): SettingsState {
     equipment_key: "F5",
     inputDelay: 0,
     inventory_key: "F2",
-    loadout: "Pat Colosseum",
+    loadout: "V3 Colosseum",
     customLoadout: null,
     lockPOV: false,
     maxUiScale: 1,
@@ -249,7 +249,7 @@ function createDefaults(): SettingsState {
     playsAreaAudio: false,
     playsAudio: false,
     prayer_key: "F3",
-    prayerLayout: [...PAT_PRAYER_LAYOUT],
+    prayerLayout: [...V3_PRAYER_LAYOUT],
     renderFps: 60,
     rotated: "south",
     smoothCacheAnimations: true,

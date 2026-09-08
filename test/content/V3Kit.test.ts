@@ -15,15 +15,15 @@ import { BurningClaws } from "../../src/content/weapons/BurningClaws";
 import { BowOfFaerdhinenIorwerth } from "../../src/content/weapons/BowOfFaerdhinenIorwerth";
 import { AmmoType } from "../../src/sdk/gear/Ammo";
 
-/** Every id in Pat's RuneLite "Colosseum" Inventory Setup. */
-const PAT_IDS = [
+/** Every id in the reference RuneLite "Colosseum" Inventory Setup. */
+const V3_IDS = [
   29041, 6570, 24780, 28260, 29037, 29039, 31106, 31095, 25975, 22947,
   12006, 7462, 25886, 27721, 12954, 33639, 27729, 27725, 12695, 2444,
   3024, 10925, 6685, 27641, 29796, 11806, 29577, 27509,
 ];
 
-test("every item in Pat's Colosseum setup resolves in the loadout registry", () => {
-  const missing = PAT_IDS.filter((id) => !LoadoutRegistry.has(id));
+test("every item in the V3 Colosseum setup resolves in the loadout registry", () => {
+  const missing = V3_IDS.filter((id) => !LoadoutRegistry.has(id));
   expect(missing).toEqual([]);
 });
 

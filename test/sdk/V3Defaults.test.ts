@@ -1,6 +1,6 @@
 import { Settings, SETTINGS_STORAGE_KEY } from "../../src/sdk/Settings";
 
-describe("Pat's keybind defaults", () => {
+describe("V3 keybind defaults", () => {
   beforeEach(() => {
     window.localStorage.clear();
     Settings.readFromStorage();

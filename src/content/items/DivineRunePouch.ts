@@ -4,7 +4,7 @@ import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import Image from "../../assets/images/potions/Divine_rune_pouch.png";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
-/** Inventory-only item from Pat's Colosseum setup; the action is inert in the trainer. */
+/** Inventory-only item from the V3 Colosseum setup; the action is inert in the trainer. */
 export class DivineRunePouch extends Item {
   inventorySprite: HTMLImageElement = ImageLoader.createImage(Image);
 

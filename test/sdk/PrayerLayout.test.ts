@@ -2,7 +2,7 @@ jest.unmock("../../src/sdk/ControlPanelController");
 
 import { ControlPanelController } from "../../src/sdk/ControlPanelController";
 import { PrayerControls } from "../../src/sdk/controlpanels/PrayerControls";
-import { PAT_PRAYER_LAYOUT } from "../../src/sdk/controlpanels/PrayerLayouts";
+import { V3_PRAYER_LAYOUT } from "../../src/sdk/controlpanels/PrayerLayouts";
 import { Player } from "../../src/sdk/Player";
 import { Settings } from "../../src/sdk/Settings";
 import { Trainer } from "../../src/sdk/Trainer";
@@ -15,7 +15,7 @@ function slotCentre(column: number, row: number) {
   return { x: (14 + column * 35 + 17) * scale, y: (22 + row * 35 + 17) * scale };
 }
 
-describe("Pat's prayer book layout", () => {
+describe("V3 prayer book layout", () => {
   let controls: PrayerControls;
   let player: Player;
 
@@ -34,7 +34,7 @@ describe("Pat's prayer book layout", () => {
   });
 
   test("is the default layout and fills 30 slots", () => {
-    expect(Settings.prayerLayout).toEqual(PAT_PRAYER_LAYOUT);
+    expect(Settings.prayerLayout).toEqual(V3_PRAYER_LAYOUT);
     const slots = controls.slotPrayers();
     expect(slots).toHaveLength(30);
     expect(slots[0]?.name).toBe("Protect from Range");
@@ -70,6 +70,6 @@ describe("Pat's prayer book layout", () => {
     const slots = controls.slotPrayers();
     expect(slots).toHaveLength(29);
     expect(slots[0]?.name).toBe("Thick Skin");
-    Settings.prayerLayout = [...PAT_PRAYER_LAYOUT];
+    Settings.prayerLayout = [...V3_PRAYER_LAYOUT];
   });
 });

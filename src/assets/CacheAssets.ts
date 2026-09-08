@@ -125,7 +125,7 @@ export const CACHE_ASSETS = {
     dragonClawsAttack: { id: 7514 },
   },
   items: {
-    // Pat's Colosseum kit (RuneLite Inventory Setup "Colosseum", 2026-09-08)
+    // V3 Colosseum kit (RuneLite Inventory Setup "Colosseum", 2026-09-08)
     amuletOfBloodFury: { id: 24780 },
     avernicTreadsPrEt: { id: 31095 },
     bloodAncientSceptre: { id: 28260 },

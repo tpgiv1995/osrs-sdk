@@ -7,8 +7,8 @@ export type PrayerLayout = string[];
 export const PRAYER_LAYOUT_COLUMNS = 5;
 export const PRAYER_LAYOUT_ROWS = 6;
 
-/** Pat's RuneLite prayer book (screenshot 2026-09-08): hidden prayers stay blank. */
-export const PAT_PRAYER_LAYOUT: PrayerLayout = [
+/** The reference RuneLite prayer book (screenshot 2026-09-08): hidden prayers stay blank. */
+export const V3_PRAYER_LAYOUT: PrayerLayout = [
   "Protect from Range", "Augury", "", "", "",
   "Protect from Magic", "Eagle Eye", "Steel Skin", "", "Rapid Heal",
   "Protect from Melee", "Piety", "", "", "Rapid Restore",
