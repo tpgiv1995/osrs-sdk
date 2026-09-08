@@ -11,3 +11,7 @@ export { KodaiWand } from "./KodaiWand";
 export { NoxiousHalberd } from "./NoxiousHalberd";
 export { ScytheOfVitur } from "./ScytheOfVitur";
 export { TwistedBow } from "./TwistedBow";
+export { BloodAncientSceptre } from "./BloodAncientSceptre";
+export { SaradominGodsword } from "./SaradominGodsword";
+export { BurningClaws } from "./BurningClaws";
+export { BowOfFaerdhinenIorwerth } from "./BowOfFaerdhinenIorwerth";

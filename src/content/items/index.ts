@@ -8,3 +8,7 @@ export { StaminaPotion } from './StaminaPotion';
 export { SuperCombatPotion } from './SuperCombatPotion';
 export { SuperRestore } from './SuperRestore';
 export { ArmadylBrew } from './ArmadylBrew';
+export { RangingPotion } from "./RangingPotion";
+export { SanfewSerum } from "./SanfewSerum";
+export { SaturatedHeart } from "./SaturatedHeart";
+export { DivineRunePouch } from "./DivineRunePouch";
