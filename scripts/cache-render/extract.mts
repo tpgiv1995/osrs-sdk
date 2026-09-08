@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { pathToFileURL } from "node:url";
 /* eslint-env node */
 /*
  * Node-only boundary around osrscachereader. It deliberately writes decoded payloads,
@@ -24,7 +25,8 @@ import { createSoundEffectPack } from "../sounds/pack.mts";
 const [adapterPath, cachePath, outputDirectory] = process.argv.slice(2);
 if (!adapterPath || !cachePath || !outputDirectory)
   throw new Error("Usage: extract-cache-render-bundle <osrscachereader-adapter.mjs> <cache-path> <output-dir>");
-const adapter = await import(resolve(adapterPath));
+// Windows absolute paths must be file:// URLs for the ESM loader.
+const adapter = await import(pathToFileURL(resolve(adapterPath)).href);
 if (typeof adapter.decodeAllAssets !== "function")
   throw new Error("Extractor adapter must export decodeAllAssets; implement it with osrscachereader@1.1.3");
 const decoded = await adapter.decodeAllAssets({ cachePath, revision: process.env.OSRS_CACHE_REVISION });

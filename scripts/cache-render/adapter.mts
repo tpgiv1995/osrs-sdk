@@ -546,7 +546,12 @@ export async function decodeAllAssets({ cachePath, revision }) {
   const itemDefs = await cache.getAllDefs(IndexType.CONFIGS.id, ConfigType.ITEM.id);
   const findItem = (name, id) => {
     const item = itemDefs.find((entry) => entry?.id === id);
-    if (!item) throw new Error(`Missing player equipment definition: ${name} (${id})`);
+    if (!item) {
+      // Items newer than the pinned cache revision have no definition yet. Skip them so the
+      // rest of the bundle still builds; the SDK renders such items without a character mesh.
+      console.warn(`Skipping player equipment with no cache definition: ${name} (${id})`);
+      return null;
+    }
     return item;
   };
   const playerPoseMap = Object.fromEntries(Object.entries(SEMANTIC_POSE_MAP).map(([index, animation]) => [index, animation.id]));
@@ -554,6 +559,7 @@ export async function decodeAllAssets({ cachePath, revision }) {
   let sharedPlayerAnimations;
   for (const [itemName, itemDefinition] of Object.entries(CACHE_ASSETS.items)) {
     const item = findItem(itemName, itemDefinition.id);
+    if (!item) continue;
     const itemIds = await itemModels(cache, item, models);
     const assetId = `player-item-${itemName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     let playerPayload;
