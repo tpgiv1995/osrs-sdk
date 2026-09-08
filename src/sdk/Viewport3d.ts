@@ -4,7 +4,6 @@ import { Viewport, ViewportDelegate } from "./Viewport";
 import { CardinalDirection, Region } from "./Region";
 
 import * as THREE from "three";
-import Stats from "three/examples/jsm/libs/stats.module";
 
 import { Settings } from "./Settings";
 import { Player } from "./Player";
@@ -53,8 +52,6 @@ export class Viewport3d implements ViewportDelegate {
 
   private touchStart: Touch | null = null;
   private touchStart2: Touch | null = null;
-
-  private stats = new Stats();
 
   private knownActors: Map<Renderable, Actor> = new Map();
 
@@ -342,7 +339,6 @@ export class Viewport3d implements ViewportDelegate {
     const frameInterval = Settings.renderFps > 0 ? 1000 / Settings.renderFps : 0;
     if (frameInterval === 0 || now >= this.nextRenderTime) {
       this.render();
-      this.stats.update();
       this.lastRenderTime = now;
       this.nextRenderTime = frameInterval === 0 ? now : (this.nextRenderTime > 0 ? this.nextRenderTime + frameInterval : now + frameInterval);
       if (this.nextRenderTime < now - frameInterval * 2) this.nextRenderTime = now + frameInterval;
@@ -350,8 +346,6 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   async initialise(world: World, region: Region) {
-    document.body.appendChild(this.stats.dom);
-
     /*const light = new THREE.PointLight(0xffffaa, 1200);
     light.position.set(region.width / 2, 30, region.height / 2);
     this.scene.add(light);*/
