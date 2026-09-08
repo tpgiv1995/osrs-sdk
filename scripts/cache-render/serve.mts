@@ -3,7 +3,7 @@
 /* Small dependency-free local server for validating the browser bundle. */
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
-import { dirname, extname, resolve } from "node:path";
+import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "cache-render-bundle");
@@ -27,7 +27,7 @@ const server = createServer(async (request, response) => {
   try {
     const requestPath = decodeURIComponent(new URL(request.url || "/", "http://localhost").pathname);
     const file = resolve(root, `.${requestPath === "/" ? "/manifest.json" : requestPath}`);
-    if (file !== root && !file.startsWith(`${root}/`)) {
+    if (file !== root && !file.startsWith(`${root}${sep}`)) {
       response.writeHead(403);
       response.end("Forbidden");
       return;
