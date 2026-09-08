@@ -179,7 +179,12 @@ export class Viewport3d implements ViewportDelegate {
 
   // implementation from https://codepen.io/seanwasere/pen/BaMBoPd
   onDocumentMouseMove(e: MouseEvent) {
-    if ((e.buttons & 4) !== 4) return;
+    const middle = (e.buttons & 4) === 4;
+    const right =
+      (e.buttons & 2) === 2 &&
+      !Viewport.viewport.contextMenu.isActive &&
+      Viewport.viewport.clickController?.isRightDragging;
+    if (!middle && !right) return;
     this.yaw.rotation.y -= e.movementX * ROTATE_MULT;
     const v = this.pitch.rotation.x - e.movementY * ROTATE_MULT;
     if (v > MIN_PITCH && v < MAX_PITCH) {

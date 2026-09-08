@@ -17,6 +17,7 @@ import { World } from "./World";
 import { Region } from "./Region";
 import { InputController } from "./Input";
 import { Trainer } from "./Trainer";
+import { RightClickGesture } from "./utils/RightClickGesture";
 
 export class ClickController {
   clickAnimation?: ClickAnimation = null;
@@ -27,6 +28,12 @@ export class ClickController {
   }
 
   eventListeners: ((e: MouseEvent) => void)[] = [];
+  private rightGesture = new RightClickGesture();
+
+  /** True while the right button is held and has moved past the drag threshold. */
+  get isRightDragging(): boolean {
+    return this.rightGesture.dragging;
+  }
 
   unload() {
     this.viewport.canvas.removeEventListener("mousedown", this.eventListeners[0]);
@@ -40,7 +47,7 @@ export class ClickController {
 
   registerClickActions() {
     this.viewport.canvas.addEventListener("mousedown", (this.eventListeners[0] = this.clickDown.bind(this)));
-    this.viewport.canvas.addEventListener("mouseup", (this.eventListeners[1] = this.leftClickUp.bind(this)));
+    this.viewport.canvas.addEventListener("mouseup", (this.eventListeners[1] = this.clickUp.bind(this)));
     this.viewport.canvas.addEventListener(
       "mousemove",
       (this.eventListeners[2] = (e: MouseEvent) => ControlPanelController.controller.cursorMovedTo(e)),
@@ -71,7 +78,15 @@ export class ClickController {
     Settings.persistToStorage();
   }
 
-  leftClickUp(e: MouseEvent) {
+  clickUp(e: MouseEvent) {
+    if (e.button === 2) {
+      // RuneLite "right click moves camera": a stationary release opens the menu,
+      // a drag only rotated the camera.
+      if (this.rightGesture.end(e.clientX, e.clientY) === "click") {
+        this.rightClickDown(e);
+      }
+      return;
+    }
     if (e.button !== 0) {
       return;
     }
@@ -90,6 +105,7 @@ export class ClickController {
   }
 
   mouseMoved(e: MouseEvent) {
+    if ((e.buttons & 2) === 2) this.rightGesture.isDragging(e.clientX, e.clientY);
     const scale = Settings.maxUiScale;
     if (this.viewport.components.some((component) => component.onMouseMove(e.offsetX / scale, e.offsetY / scale))) {
       this.hoverTooltip = null;
@@ -227,7 +243,8 @@ export class ClickController {
 
   clickDown(e: MouseEvent) {
     if (e.button === 2) {
-      this.rightClickDown(e);
+      this.rightGesture.begin(e.clientX, e.clientY);
+      return;
     }
 
     if (e.button === 1) {

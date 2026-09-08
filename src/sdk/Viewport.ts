@@ -75,7 +75,7 @@ export class Viewport {
   activeButtonImage: HTMLImageElement = ImageLoader.createImage(ButtonActiveIcon);
   contextMenu: ContextMenu = new ContextMenu();
 
-  private clickController: ClickController;
+  clickController: ClickController;
   private resizeObserver: ResizeObserver | null = null;
   width: number;
   height: number;
