@@ -1,6 +1,7 @@
 "use strict";
 
 import { Player } from "./Player";
+import { ItemName } from "./ItemName";
 
 export class PlayerRegenTimer {
   player: Player;
@@ -24,10 +25,15 @@ export class PlayerRegenTimer {
     this.hitpointRegen();
   }
 
+  /** Lightbearer halves the 50-tick special energy interval. */
+  specInterval() {
+    return this.player.equipment.ring?.itemName === ItemName.LIGHTBEARER ? 25 : 50;
+  }
+
   specRegen() {
     this.spec--;
-    if (this.spec === 0) {
-      this.spec = 50;
+    if (this.spec <= 0 || this.spec > this.specInterval()) {
+      this.spec = this.specInterval();
       this.player.currentStats.specialAttack += 10;
       this.player.currentStats.specialAttack = Math.min(100, this.player.currentStats.specialAttack);
     }

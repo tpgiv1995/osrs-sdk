@@ -23,7 +23,7 @@ export class ConflictionGauntlets extends Gloves {
     this.bonuses = {
       attack: { stab: 0, slash: 0, crush: 0, magic: 20, range: -4 },
       defence: { stab: 15, slash: 18, crush: 7, magic: 5, range: 5 },
-      other: { meleeStrength: 0, rangedStrength: 0, magicDamage: 7, prayer: 2 },
+      other: { meleeStrength: 0, rangedStrength: 0, magicDamage: 0.07, prayer: 2 },
       targetSpecific: { undead: 0, slayer: 0 },
     };
   }

@@ -4,7 +4,13 @@ import PrayerTab from "../../assets/images/tabs/prayer.png";
 import { ImageLoader } from "../utils/ImageLoader";
 import type { BasePrayer } from "../BasePrayer";
 import { PRAYER_BOOK_ICONS } from "./PrayerBookIcons";
-import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS } from "./PrayerLayouts";
+import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS, PRAYER_LAYOUT_ROWS } from "./PrayerLayouts";
+
+// Geometry of the stock panel image's icon grid, in unscaled panel pixels.
+const SLOT_LEFT = 10;
+const SLOT_TOP = 16;
+const SLOT_W = 36.8;
+const SLOT_H = 37;
 import { BaseControls } from "./BaseControls";
 import { Settings } from "../Settings";
 import { ControlPanelController } from "../ControlPanelController";
@@ -29,14 +35,23 @@ export class PrayerControls extends BaseControls {
     return layout.map((name) => (name ? prayers.find((prayer) => prayer.name === name) ?? null : null));
   }
 
+  /** Panel-relative slot origin in unscaled panel pixels; the drawn icon is 37x37 from here. */
+  static slotOrigin(index: number) {
+    return {
+      x: Math.round(SLOT_LEFT + (index % PRAYER_LAYOUT_COLUMNS) * SLOT_W),
+      y: SLOT_TOP + Math.floor(index / PRAYER_LAYOUT_COLUMNS) * SLOT_H,
+    };
+  }
+
   private prayerAt(x: number, y: number): BasePrayer | null {
     const scale = Settings.controlPanelScale;
-    const gridX = x / scale - 14;
-    const gridY = y / scale - 22;
+    const gridX = x / scale - SLOT_LEFT;
+    const gridY = y / scale - SLOT_TOP;
     if (gridX < 0 || gridY < 0) return null;
-    const column = Math.floor(gridX / 35);
-    if (column >= PRAYER_LAYOUT_COLUMNS) return null;
-    return this.slotPrayers()[Math.floor(gridY / 35) * PRAYER_LAYOUT_COLUMNS + column] ?? null;
+    const column = Math.floor(gridX / SLOT_W);
+    const row = Math.floor(gridY / SLOT_H);
+    if (column >= PRAYER_LAYOUT_COLUMNS || row >= PRAYER_LAYOUT_ROWS) return null;
+    return this.slotPrayers()[row * PRAYER_LAYOUT_COLUMNS + column] ?? null;
   }
 
   get panelImageReference() {
@@ -111,7 +126,8 @@ export class PrayerControls extends BaseControls {
       if (customLayout) {
         const icon = this.bookIcons[prayer.name];
         if (icon) {
-          context.drawImage(icon, x + Math.round(10 + x2 * 36.8) * scale, y + (16 + y2 * 37) * scale, 37 * scale, 37 * scale);
+          const origin = PrayerControls.slotOrigin(index);
+          context.drawImage(icon, x + origin.x * scale, y + origin.y * scale, SLOT_H * scale, SLOT_H * scale);
         }
       }
 

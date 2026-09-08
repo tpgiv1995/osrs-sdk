@@ -23,7 +23,7 @@ export class BlueMoonTassets extends Legs {
     this.bonuses = {
       attack: { stab: 0, slash: 0, crush: 0, magic: 22, range: 0 },
       defence: { stab: 0, slash: 0, crush: 23, magic: 32, range: 0 },
-      other: { meleeStrength: 1, rangedStrength: 0, magicDamage: 1, prayer: 0 },
+      other: { meleeStrength: 1, rangedStrength: 0, magicDamage: 0.01, prayer: 0 },
       targetSpecific: { undead: 0, slayer: 0 },
     };
   }

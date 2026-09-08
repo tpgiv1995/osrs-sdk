@@ -219,7 +219,9 @@ export class Viewport {
     ControlPanelController.controller.draw(this.context);
     {
       const { width: chromeWidth, height: chromeHeight } = Chrome.size();
-      ChatStrip.draw(this.context, chromeWidth, chromeHeight, ControlPanelController.controller.getTabScale());
+      const controller = ControlPanelController.controller;
+      const tabsLeft = controller.controls?.length ? controller.tabPosition(0).x : chromeWidth;
+      ChatStrip.draw(this.context, chromeWidth, chromeHeight, controller.getTabScale(), tabsLeft);
     }
     XpDropController.controller.draw(
       this.context,

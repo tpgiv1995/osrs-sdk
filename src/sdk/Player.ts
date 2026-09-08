@@ -37,6 +37,8 @@ import { CacheRenderModel } from "./rendering/CacheRenderModel";
 import { CacheRenderReferences } from "./rendering/CacheRenderReference";
 import { FallbackModel } from "./rendering/FallbackModel";
 import { Trainer } from "./Trainer";
+import { Random } from "./Random";
+import { MeleeWeapon } from "./weapons/MeleeWeapon";
 import type { Projectile } from "./weapons/Projectile";
 import { UILayerProjector } from "./Renderable";
 
@@ -171,6 +173,15 @@ export class Player extends Unit {
     }
     const base = this.equipment.weapon ? this.equipment.weapon.attackRange : 1;
     return Math.max(1, base - this.attackRangePenalty);
+  }
+
+  /** Amulet of blood fury: 20% of damaging melee hits heal 30% of the damage. */
+  override dealtDamage(damage: number, projectile: Projectile, _target: Unit) {
+    if (damage <= 0) return;
+    if (this.equipment.necklace?.itemName !== ItemName.AMULET_OF_BLOOD_FURY) return;
+    if (!(projectile.weapon instanceof MeleeWeapon)) return;
+    if (Random.get() >= 0.2) return;
+    this.currentStats.hitpoint = Math.min(this.stats.hitpoint, this.currentStats.hitpoint + Math.floor(damage * 0.3));
   }
 
   override modifyIncomingDamage(damage: number, projectile: Projectile): number {

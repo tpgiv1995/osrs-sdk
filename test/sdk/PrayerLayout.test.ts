@@ -9,10 +9,11 @@ import { Trainer } from "../../src/sdk/Trainer";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import { World } from "../../src/sdk/World";
 
-/** Panel-relative pixel centre of a book slot, mirroring PrayerControls' hit test. */
+/** Panel-relative pixel centre of a drawn book slot (the same geometry the icons use). */
 function slotCentre(column: number, row: number) {
   const scale = Settings.controlPanelScale;
-  return { x: (14 + column * 35 + 17) * scale, y: (22 + row * 35 + 17) * scale };
+  const origin = PrayerControls.slotOrigin(row * 5 + column);
+  return { x: (origin.x + 18) * scale, y: (origin.y + 18) * scale };
 }
 
 describe("V3 prayer book layout", () => {
@@ -63,6 +64,16 @@ describe("V3 prayer book layout", () => {
     controls.panelClickDown(x, y);
     expect(player.prayerController.activePrayers().length).toBe(before);
     expect(controls.hoverAction(x, y)).toBeNull();
+  });
+
+  test("clicking the edge of a drawn slot hits that slot, not its neighbour", () => {
+    const scale = Settings.controlPanelScale;
+    const origin = PrayerControls.slotOrigin(10); // Protect from Melee in the V3 layout
+    controls.panelClickDown((origin.x + 2) * scale, (origin.y + 35) * scale);
+    const melee = player.prayerController.prayers.find((prayer) => prayer.name === "Protect from Melee");
+    expect(melee.isLit).toBe(true);
+    controls.panelClickDown((origin.x + 2) * scale, (origin.y + 35) * scale);
+    expect(melee.isLit).toBe(false);
   });
 
   test("clearing the layout restores the stock book order", () => {

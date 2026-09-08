@@ -35,6 +35,12 @@ export class ClickController {
     return this.rightGesture.dragging;
   }
 
+  /** Feed a mousemove to the right-drag gesture; safe to call from any listener order. */
+  trackRightDrag(e: MouseEvent): boolean {
+    if ((e.buttons & 2) !== 2) return false;
+    return this.rightGesture.isDragging(e.clientX, e.clientY);
+  }
+
   unload() {
     this.viewport.canvas.removeEventListener("mousedown", this.eventListeners[0]);
     this.viewport.canvas.removeEventListener("mouseup", this.eventListeners[1]);
@@ -105,7 +111,7 @@ export class ClickController {
   }
 
   mouseMoved(e: MouseEvent) {
-    if ((e.buttons & 2) === 2) this.rightGesture.isDragging(e.clientX, e.clientY);
+    this.trackRightDrag(e);
     const scale = Settings.maxUiScale;
     if (this.viewport.components.some((component) => component.onMouseMove(e.offsetX / scale, e.offsetY / scale))) {
       this.hoverTooltip = null;

@@ -725,6 +725,7 @@ export abstract class Unit extends Renderable {
           }
         }
         this.damageTaken(projectile.damage);
+        projectile.from?.dealtDamage?.(projectile.damage, projectile, this);
         this.lastHitAgo = 0;
         if (this.shouldChangeAggro(projectile)) {
           this.setAggro(projectile.from);
@@ -754,6 +755,11 @@ export abstract class Unit extends Renderable {
   /** Last chance to change a hit before it lands. Override me. */
   modifyIncomingDamage(damage: number, projectile: Projectile): number {
     return damage;
+  }
+
+  /** Called when a hit from this unit lands on a target. Override me. */
+  dealtDamage(damage: number, projectile: Projectile, target: Unit) {
+    // Override me
   }
 
   setOverheadText(text: string) {

@@ -28,15 +28,15 @@ test("every item in the V3 Colosseum setup resolves in the loadout registry", ()
 });
 
 test.each([
-  ["Blue moon helm", new BlueMoonHelm(), 29041, { magic: 6 }, { crush: 10, magic: 6 }, { meleeStrength: 3, magicDamage: 1 }],
-  ["Blue moon chestplate", new BlueMoonChestplate(), 29037, { magic: 30 }, { crush: 51, magic: 28 }, { meleeStrength: 2, magicDamage: 1 }],
-  ["Blue moon tassets", new BlueMoonTassets(), 29039, { magic: 22 }, { crush: 23, magic: 32 }, { meleeStrength: 1, magicDamage: 1 }],
+  ["Blue moon helm", new BlueMoonHelm(), 29041, { magic: 6 }, { crush: 10, magic: 6 }, { meleeStrength: 3, magicDamage: 0.01 }],
+  ["Blue moon chestplate", new BlueMoonChestplate(), 29037, { magic: 30 }, { crush: 51, magic: 28 }, { meleeStrength: 2, magicDamage: 0.01 }],
+  ["Blue moon tassets", new BlueMoonTassets(), 29039, { magic: 22 }, { crush: 23, magic: 32 }, { meleeStrength: 1, magicDamage: 0.01 }],
   ["Fire cape", new FireCape(), 6570, { slash: 1 }, { slash: 11 }, { meleeStrength: 4, prayer: 2 }],
   ["Blood fury", new AmuletOfBloodFury(), 24780, { stab: 10 }, { range: 15 }, { meleeStrength: 8, prayer: 5 }],
-  ["Confliction gauntlets", new ConflictionGauntlets(), 31106, { magic: 20, range: -4 }, { slash: 18 }, { magicDamage: 7, prayer: 2 }],
-  ["Avernic treads", new AvernicTreadsPrEt(), 31095, { range: 15 }, { slash: 25 }, { meleeStrength: 6, rangedStrength: 2, magicDamage: 2 }],
+  ["Confliction gauntlets", new ConflictionGauntlets(), 31106, { magic: 20, range: -4 }, { slash: 18 }, { magicDamage: 0.07, prayer: 2 }],
+  ["Avernic treads", new AvernicTreadsPrEt(), 31095, { range: 15 }, { slash: 25 }, { meleeStrength: 6, rangedStrength: 2, magicDamage: 0.02 }],
   ["Necklace of rupture", new NecklaceOfRupture(), 33639, { range: 20 }, {}, { rangedStrength: 8, prayer: 3 }],
-  ["Blood ancient sceptre", new BloodAncientSceptre(), 28260, { crush: 50, magic: 20 }, { magic: 15 }, { meleeStrength: 60, magicDamage: 10, prayer: -1 }],
+  ["Blood ancient sceptre", new BloodAncientSceptre(), 28260, { crush: 50, magic: 20 }, { magic: 15 }, { meleeStrength: 60, magicDamage: 0.1, prayer: -1 }],
   ["Saradomin godsword", new SaradominGodsword(), 11806, { slash: 132, crush: 80 }, {}, { meleeStrength: 132, prayer: 8 }],
   ["Burning claws", new BurningClaws(), 29577, { stab: 43, slash: 54 }, { slash: 6 }, { meleeStrength: 32 }],
 ])("%s has wiki bonuses", (_label, item, id, attack, defence, other) => {
@@ -51,7 +51,8 @@ test("two-handers, speeds, and the blessing slot", () => {
   expect(new SaradominGodsword().attackSpeed).toBe(6);
   expect(new BurningClaws().isTwoHander).toBe(true);
   expect(new BurningClaws().attackSpeed).toBe(4);
-  expect(new BloodAncientSceptre().attackSpeed).toBe(4);
+  expect(new BloodAncientSceptre().attackSpeed).toBe(5);
+  expect(new BurningClaws().specialAttackDrain()).toBe(35);
   expect(new RadasBlessing4().ammoType()).toBe(AmmoType.BLESSING);
 });
 

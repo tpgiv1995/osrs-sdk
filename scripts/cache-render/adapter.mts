@@ -559,11 +559,11 @@ export async function decodeAllAssets({ cachePath, revision }) {
   let sharedPlayerAnimations;
   for (const [itemName, itemDefinition] of Object.entries(CACHE_ASSETS.items)) {
     const item = findItem(itemName, itemDefinition.id);
-    if (!item) continue;
-    const itemIds = await itemModels(cache, item, models);
+    const itemIds = item ? await itemModels(cache, item, models) : [];
     const assetId = `player-item-${itemName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     let playerPayload;
     if (!itemIds.length) {
+      // Also used for items newer than the cache: they keep their loadout key but have no mesh.
       // Rings and some ammo have no character mesh but still participate in the
       // semantic loadout key; represent them as an empty composable asset.
       playerPayload = { positions: [0, 0, 0], indices: [], color: 0xffffff, animations: {}, poseMap: playerPoseMap };
@@ -595,7 +595,7 @@ export async function decodeAllAssets({ cachePath, revision }) {
     assets.push({ id: assetId, payload: playerPayload });
     // Item IDs are the stable contract used by SDK equipment definitions. Keep
     // the normalized name alias for older bundles/third-party callers.
-    playerItemAssets[`item:${item.id}`] = assetId;
+    playerItemAssets[`item:${itemDefinition.id}`] = assetId;
     playerItemAssets[itemKey(itemName)] = assetId;
   }
   let sharedAssets;

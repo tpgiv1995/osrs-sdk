@@ -26,7 +26,7 @@ export class BloodAncientSceptre extends MeleeWeapon {
     this.bonuses = {
       attack: { stab: 20, slash: -1, crush: 50, magic: 20, range: 0 },
       defence: { stab: 2, slash: 3, crush: 1, magic: 15, range: 0 },
-      other: { meleeStrength: 60, rangedStrength: 0, magicDamage: 10, prayer: -1 },
+      other: { meleeStrength: 60, rangedStrength: 0, magicDamage: 0.1, prayer: -1 },
       targetSpecific: { undead: 0, slayer: 0 },
     };
   }
@@ -79,7 +79,8 @@ export class BloodAncientSceptre extends MeleeWeapon {
   }
 
   get attackSpeed() {
-    return 4;
+    // Blood barrage autocasts on the spell's 5-tick cycle; melee swings are 4.
+    return this.attackStyle() === AttackStyle.AUTOCAST ? 5 : 4;
   }
 
   get inventoryImage() {

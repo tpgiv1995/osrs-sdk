@@ -88,7 +88,7 @@ export class Projectile extends Renderable {
     This should take the player and mob object, and do chebyshev on the size of them
   */
   constructor(
-    private weapon: Weapon | null,
+    readonly weapon: Weapon | null,
     damage: number,
     from: Unit,
     to: Unit | Location3,

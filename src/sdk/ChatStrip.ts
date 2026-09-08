@@ -16,8 +16,20 @@ const LEFT = 8;
 
 /** Visual-only copy of the RuneLite modern-layout chat buttons along the bottom-left. */
 export class ChatStrip {
-  static draw(context: CanvasRenderingContext2D, width: number, height: number, scale: number) {
+  /** Unscaled width of the whole strip: seven buttons, gaps, and the clock. */
+  static readonly TOTAL_W = LEFT + LABELS.length * (BOX_W + GAP) + BOX_W * 1.5;
+
+  /**
+   * @param maxRight the left edge of the tab row; the strip shrinks to stay left of it
+   * and hides if that would make it unreadable.
+   */
+  static draw(context: CanvasRenderingContext2D, width: number, height: number, scale: number, maxRight = width) {
     if (!Settings.modernLayout || Settings.mobileCheck()) return;
+    const room = maxRight - 8;
+    if (ChatStrip.TOTAL_W * scale > room) {
+      scale = room / ChatStrip.TOTAL_W;
+      if (scale < 0.45) return;
+    }
     const boxW = BOX_W * scale;
     const boxH = BOX_H * scale;
     const y = height - boxH - 4 * scale;

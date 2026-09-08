@@ -125,10 +125,8 @@ export class TrainerInstance {
   }
 
   reset() {
+    // The reset listener registered in the constructor refreshes the snapshot once.
     Trainer.reset();
-    this.player = Trainer.player;
-    this.playerDead = false;
-    this.notifyChanged();
     return this.player;
   }
 

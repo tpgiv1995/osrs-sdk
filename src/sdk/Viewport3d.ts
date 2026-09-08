@@ -183,7 +183,7 @@ export class Viewport3d implements ViewportDelegate {
     const right =
       (e.buttons & 2) === 2 &&
       !Viewport.viewport.contextMenu.isActive &&
-      Viewport.viewport.clickController?.isRightDragging;
+      (Viewport.viewport.clickController?.trackRightDrag(e) ?? false);
     if (!middle && !right) return;
     const rotate = ROTATE_MULT * (Settings.cameraSensitivity || 1);
     this.yaw.rotation.y -= e.movementX * rotate;

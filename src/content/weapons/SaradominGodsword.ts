@@ -3,6 +3,10 @@ import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController"
 import { ItemName } from "../../sdk/ItemName";
 import { Sound } from "../../sdk/utils/SoundCache";
 import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
+import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { Unit } from "../../sdk/Unit";
+import { Random } from "../../sdk/Random";
+import { ProjectileOptions } from "../../sdk/weapons/Projectile";
 
 import { cacheSound } from "../../sdk/audio/CacheSoundEffects";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
@@ -54,6 +58,45 @@ export class SaradominGodsword extends MeleeWeapon {
 
   get attackRange() {
     return 1;
+  }
+
+  /**
+   * Healing Blade: doubled accuracy, +10% max hit, and on a hit restores 50% of the
+   * damage as Hitpoints (min 10) and 25% as Prayer (min 5). Costs 50% energy.
+   */
+  specialAttack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}): boolean {
+    bonuses.attackStyle = "slash";
+    bonuses.isSpecialAttack = true;
+    this._calculatePrayerEffects(from, to, bonuses);
+    bonuses.styleBonus = bonuses.styleBonus || 0;
+    bonuses.voidMultiplier = bonuses.voidMultiplier || 1;
+    bonuses.gearMeleeMultiplier = bonuses.gearMeleeMultiplier || 1;
+    bonuses.overallMultiplier = (bonuses.overallMultiplier || 1) * 1.1;
+
+    const attackRoll = this._attackRoll(from, to, bonuses) * 2;
+    const defenceRoll = this._defenceRoll(from, to, bonuses);
+    const hitChance = attackRoll > defenceRoll ? 1 - (defenceRoll + 2) / (2 * attackRoll + 1) : attackRoll / (2 * defenceRoll + 1);
+    this.lastHitHit = false;
+    let damage = 0;
+    if (from.forceMaxDamageRollsOnNextAttack || Random.get() <= hitChance) {
+      damage = this._calculateHitDamage(from, to, bonuses);
+    }
+    if (this.isBlockable(from, to, bonuses)) damage = 0;
+    damage = Math.floor(Math.max(Math.min(to.currentStats.hitpoint, damage, this.getMaxDamageCap(bonuses)), 0));
+    this.damageRoll = damage;
+    this.damage = damage;
+
+    if (damage > 0) {
+      const heal = Math.max(10, Math.ceil(damage / 2));
+      const prayer = Math.max(5, Math.ceil(damage / 4));
+      from.currentStats.hitpoint = Math.min(from.stats.hitpoint, from.currentStats.hitpoint + heal);
+      from.currentStats.prayer = Math.min(from.stats.prayer, from.currentStats.prayer + prayer);
+    }
+
+    this.grantXp(from, to);
+    this.registerProjectile(from, to, bonuses, options);
+    if (this.lastHitHit) from.consumeMaxDamageRollsOnNextAttack();
+    return true;
   }
 
   get attackSpeed() {

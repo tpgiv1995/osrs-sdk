@@ -6,7 +6,8 @@ import { Random } from "../../sdk/Random";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 import { Unit } from "../../sdk/Unit";
 import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
-import { ProjectileOptions } from "../../sdk/weapons/Projectile";
+import { Projectile, ProjectileOptions } from "../../sdk/weapons/Projectile";
+import { DelayedAction } from "../../sdk/DelayedAction";
 import { Sound, SoundCache } from "../../sdk/utils/SoundCache";
 import { cacheSound } from "../../sdk/audio/CacheSoundEffects";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
@@ -95,9 +96,18 @@ export class BurningClaws extends MeleeWeapon {
     return true;
   }
 
-  /** Slice and Dice: four accuracy rolls, then a linked four-hit damage split. */
+  specialAttackDrain(): number {
+    return 35;
+  }
+
+  /**
+   * Burning barrage: three accuracy rolls decide the damage band, rolled as a total
+   * and split into three hits. Each hit can start a burn: 1 damage every 4 ticks for
+   * 40 ticks, up to five burns at once. Band and burn numbers follow the wiki.
+   */
   specialAttack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}): boolean {
     bonuses.attackStyle = "slash";
+    bonuses.isSpecialAttack = true;
     bonuses.styleBonus = bonuses.styleBonus || 0;
     bonuses.voidMultiplier = bonuses.voidMultiplier || 1;
     bonuses.gearMeleeMultiplier = bonuses.gearMeleeMultiplier || 1;
@@ -105,12 +115,12 @@ export class BurningClaws extends MeleeWeapon {
     this._calculatePrayerEffects(from, to, bonuses);
 
     const protectedFromMelee = this.isBlockable(from, to, bonuses);
-    let firstSuccessfulHit = -1;
+    let successfulRoll = -1;
     if (!protectedFromMelee) {
       const hitChance = this._hitChance(from, to, bonuses);
-      for (let hit = 0; hit < 4; hit++) {
-        if (Random.get() <= hitChance) {
-          firstSuccessfulHit = hit;
+      for (let roll = 0; roll < 3; roll++) {
+        if (from.forceMaxDamageRollsOnNextAttack || Random.get() <= hitChance) {
+          successfulRoll = roll;
           break;
         }
       }
@@ -124,30 +134,20 @@ export class BurningClaws extends MeleeWeapon {
     };
 
     let hits: number[];
-    if (firstSuccessfulHit === 0) {
-      const first = rollBetween(maxHit / 2, maxHit - 1);
-      const second = Math.floor(first / 2);
-      const third = Math.floor(second / 2);
-      hits = [first, second, third, third + 1];
-    } else if (firstSuccessfulHit === 1) {
-      const second = rollBetween((3 * maxHit) / 8, (7 * maxHit) / 8);
-      const third = Math.floor(second / 2);
-      hits = [0, second, third, third + 1];
-    } else if (firstSuccessfulHit === 2) {
-      const third = rollBetween(maxHit / 4, (3 * maxHit) / 4);
-      hits = [0, 0, third, third + 1];
-    } else if (firstSuccessfulHit === 3) {
-      hits = [0, 0, 0, rollBetween(maxHit / 4, (5 * maxHit) / 4)];
-    } else if (Random.get() < 2 / 3) {
-      const patterns = [
-        [1, 1, 0, 0],
-        [0, 0, 1, 1],
-        [1, 0, 1, 0],
-        [0, 1, 0, 1],
-      ];
-      hits = patterns[Math.floor(Random.get() * patterns.length)];
+    let burnChance = 0;
+    if (successfulRoll === 0) {
+      hits = this.splitTotal(rollBetween(maxHit * 0.75, maxHit * 1.75));
+      burnChance = 0.15;
+    } else if (successfulRoll === 1) {
+      hits = this.splitTotal(rollBetween(maxHit * 0.5, maxHit * 1.5));
+      burnChance = 0.3;
+    } else if (successfulRoll === 2) {
+      hits = this.splitTotal(rollBetween(maxHit * 0.25, maxHit * 1.25));
+      burnChance = 0.45;
     } else {
-      hits = [0, 0, 0, 0];
+      const roll = Random.get();
+      const total = roll < 0.2 ? 0 : roll < 0.6 ? 1 : 2;
+      hits = [total, 0, 0];
     }
 
     hits.forEach((damage, hit) => {
@@ -159,13 +159,39 @@ export class BurningClaws extends MeleeWeapon {
         sound: hit === 0 ? this.specialAttackSound : null,
         setDelay: hit < 2 ? 1 : 2,
       });
+      if (damage > 0 && burnChance > 0 && Random.get() < burnChance) this.startBurn(from, to);
     });
     SPECIAL_ATTACK_FOLLOW_UP_SOUNDS.forEach(({ id, delayMs }) => {
       setTimeout(() => SoundCache.play(new Sound(cacheSound(id), SOUND_VOLUME)), delayMs);
     });
-    this.lastHitHit = firstSuccessfulHit >= 0;
+    this.lastHitHit = successfulRoll >= 0;
     if (this.lastHitHit) from.consumeMaxDamageRollsOnNextAttack();
     return true;
+  }
+
+  /** Three hits: half, quarter, and the remainder. */
+  private splitTotal(total: number): number[] {
+    const first = Math.floor(total / 2);
+    const second = Math.floor(total / 4);
+    return [first, second, total - first - second];
+  }
+
+  private activeBurns = 0;
+
+  private startBurn(from: Unit, to: Unit) {
+    if (this.activeBurns >= 5) return;
+    this.activeBurns++;
+    let ticks = 0;
+    const tick = () => {
+      ticks++;
+      if (to.isDying() || ticks > 10) {
+        this.activeBurns = Math.max(0, this.activeBurns - 1);
+        return;
+      }
+      to.addProjectile(new Projectile(null, 1, from, to, "typeless", { hidden: true, setDelay: 0, cancelOnDeath: true }));
+      DelayedAction.registerDelayedAction(new DelayedAction(tick, 4));
+    };
+    DelayedAction.registerDelayedAction(new DelayedAction(tick, 4));
   }
 
   get specialAttackSound() {
