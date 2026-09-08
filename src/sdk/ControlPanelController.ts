@@ -29,6 +29,13 @@ interface TabPosition {
 const BASE_WIDTH = 33 * 7;
 const BASE_HEIGHT = 36 * 2 + 275;
 
+export const TAB_W = 33;
+export const TAB_H = 36;
+export const PANEL_W = 204;
+export const PANEL_H = 275;
+/** How much larger the modern layout draws the panel than maxUiScale alone. */
+export const MODERN_SCALE_MULT = 1.4;
+
 export class ControlPanelController {
   static controls = Object.freeze({
     COMBAT: new CombatControls(),
@@ -119,11 +126,17 @@ export class ControlPanelController {
     const { width, height } = Chrome.size();
 
     const controlAreaHeight = height - MapController.controller.height;
-    let scaleRatio = controlAreaHeight / 7 / 36;
-
+    let scaleRatio: number;
     let maxScaleRatio = Settings.maxUiScale;
-    if (Settings.mobileCheck() && width > 600) {
-      maxScaleRatio = Settings.maxUiScale * 1.1;
+    if (Settings.modernLayout && !Settings.mobileCheck()) {
+      // One tab row under the panel; both must fit beneath the minimap.
+      scaleRatio = controlAreaHeight / (PANEL_H + TAB_H);
+      maxScaleRatio = Settings.maxUiScale * MODERN_SCALE_MULT;
+    } else {
+      scaleRatio = controlAreaHeight / 7 / TAB_H;
+      if (Settings.mobileCheck() && width > 600) {
+        maxScaleRatio = Settings.maxUiScale * 1.1;
+      }
     }
 
     if (scaleRatio > maxScaleRatio) {
@@ -145,6 +158,11 @@ export class ControlPanelController {
       const mapHeight = 170 * Settings.minimapScale;
       const spacer = (height - mapHeight - 36 * scale * 7) / 2;
       return { x: 15, y: mapHeight + spacer };
+    } else if (Settings.modernLayout) {
+      return {
+        x: width - this.controls.length * TAB_W * scale - 60 * scale,
+        y: height - TAB_H * scale,
+      };
     } else {
       return {
         x: width - 231 * scale + 28,
@@ -169,6 +187,12 @@ export class ControlPanelController {
           y: mapHeight + spacer + (i - 7) * 36 * scale,
         };
       }
+    } else if (Settings.modernLayout) {
+      // RuneLite resizable-modern: a single right-aligned row along the bottom edge.
+      return {
+        x: width - (this.controls.length - i) * TAB_W * scale,
+        y: height - TAB_H * scale,
+      };
     } else {
       const x = i % 7;
       const y = Math.floor(i / 7);
@@ -335,6 +359,11 @@ export class ControlPanelController {
           y: mapHeight + spacer,
         };
       }
+    } else if (Settings.modernLayout) {
+      return {
+        x: width - PANEL_W * scale,
+        y: height - TAB_H * scale - PANEL_H * scale,
+      };
     } else {
       // desktop compact
       return {
