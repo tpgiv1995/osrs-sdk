@@ -28,6 +28,8 @@ export type SettingsState = {
   maxUiScale: number;
   menuVisible: boolean;
   metronome: boolean;
+  /** RuneLite resizable-modern look: one bottom tab row, larger panel, chat strip. */
+  modernLayout: boolean;
   northPillar: boolean;
   onTask: boolean;
   player_stats: PlayerStats;
@@ -68,6 +70,7 @@ export class Settings {
   static lockPOV: boolean;
   static displayFeedback: boolean;
   static metronome: boolean;
+  static modernLayout = true;
   static antiDrag: number;
 
   static inventory_key: string;
@@ -190,6 +193,7 @@ export class Settings {
       maxUiScale: Settings.maxUiScale,
       menuVisible: Settings.menuVisible,
       metronome: Settings.metronome,
+      modernLayout: Settings.modernLayout,
       northPillar: Settings.northPillar,
       onTask: Settings.onTask,
       player_stats: Settings.player_stats,
@@ -222,12 +226,13 @@ function createDefaults(): SettingsState {
     equipment_key: "F5",
     inputDelay: 0,
     inventory_key: "F2",
-    loadout: "max_tbow_speed",
+    loadout: "Pat Colosseum",
     customLoadout: null,
     lockPOV: false,
     maxUiScale: 1,
-    menuVisible: !mobile,
+    menuVisible: false,
     metronome: false,
+    modernLayout: true,
     northPillar: true,
     onTask: false,
     player_stats: DeserializePlayerStats(null),
@@ -273,6 +278,7 @@ const legacyStorage: SettingsStorage<SettingsState> = {
       maxUiScale: parseFloat(window.localStorage.getItem("maxUiScale")) || 1,
       menuVisible: menuVisible === "true" ? true : menuVisible === "false" ? false : defaults.menuVisible,
       metronome: legacyBoolean("metronome", false),
+      modernLayout: defaults.modernLayout,
       northPillar: window.localStorage.getItem("northPillar") !== "false",
       onTask: legacyBoolean("onTask", false),
       player_stats: DeserializePlayerStats(window.localStorage.getItem("stats")),

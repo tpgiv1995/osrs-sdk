@@ -14,6 +14,11 @@ describe("Pat's keybind defaults", () => {
     expect(Settings.equipment_key).toBe("F5");
   });
 
+  test("the site sidebar starts hidden and the modern layout is on", () => {
+    expect(Settings.menuVisible).toBe(false);
+    expect(Settings.modernLayout).toBe(true);
+  });
+
   test("defaults survive a persist and reload cycle", () => {
     Settings.persistToStorage();
     const stored = JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY));
