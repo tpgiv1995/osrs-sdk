@@ -107,7 +107,8 @@ export class ControlPanelController {
 
       this.controls.forEach((control) => {
         if (control.keyBinding === event.key) {
-          this.selectedControl = control;
+          // RuneLite modern layout: the hotkey of the open panel closes it.
+          this.selectedControl = this.selectedControl === control ? null : control;
           event.preventDefault();
         }
       });
@@ -216,6 +217,9 @@ export class ControlPanelController {
   }
   controlPanelRightClick(e: MouseEvent): boolean {
     let intercepted = false;
+    if (!this.selectedControl) {
+      return intercepted;
+    }
 
     const scale = Settings.controlPanelScale;
     const x = e.offsetX;
@@ -321,7 +325,7 @@ export class ControlPanelController {
     if (Settings.mobileCheck()) {
       const mapHeight = 170 * Settings.minimapScale;
       const spacer = (height - mapHeight - 36 * scale * 7) / 2;
-      if (this.selectedControl.appearsOnLeftInMobile) {
+      if (control.appearsOnLeftInMobile) {
         // left side mobile
         return { x: 33 * scale + 15, y: mapHeight + spacer };
       } else {
