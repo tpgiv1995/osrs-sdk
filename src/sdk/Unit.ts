@@ -710,6 +710,7 @@ export abstract class Unit extends Renderable {
           return;
         }
 
+        projectile.damage = this.modifyIncomingDamage(projectile.damage, projectile);
         if (projectile.damage < 0) {
           // subtracting a negative gives a positive
           if (this.currentStats.hitpoint < this.stats.hitpoint) {
@@ -723,7 +724,7 @@ export abstract class Unit extends Renderable {
             SoundCache.play(sound);
           }
         }
-        this.damageTaken();
+        this.damageTaken(projectile.damage);
         this.lastHitAgo = 0;
         if (this.shouldChangeAggro(projectile)) {
           this.setAggro(projectile.from);
@@ -746,8 +747,13 @@ export abstract class Unit extends Renderable {
     // Override me
   }
 
-  damageTaken() {
+  damageTaken(damage = 0) {
     // Override me
+  }
+
+  /** Last chance to change a hit before it lands. Override me. */
+  modifyIncomingDamage(damage: number, projectile: Projectile): number {
+    return damage;
   }
 
   setOverheadText(text: string) {

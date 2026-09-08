@@ -37,6 +37,7 @@ import { CacheRenderModel } from "./rendering/CacheRenderModel";
 import { CacheRenderReferences } from "./rendering/CacheRenderReference";
 import { FallbackModel } from "./rendering/FallbackModel";
 import { Trainer } from "./Trainer";
+import type { Projectile } from "./weapons/Projectile";
 import { UILayerProjector } from "./Renderable";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -157,14 +158,23 @@ export class Player extends Unit {
     return true;
   }
 
+  /** Tiles removed from weapon and autocast range (Colosseum Myopia). Manual casts are unaffected. */
+  attackRangePenalty = 0;
+  /** Applied in order to every hit that lands on this player; each returns the new damage. */
+  incomingDamageModifiers: ((damage: number, projectile: Projectile) => number)[] = [];
+  /** Called with the damage of every hit that lands (0 for a blocked hit). */
+  damageTakenListeners: ((damage: number) => void)[] = [];
+
   get attackRange() {
     if (this.manualSpellCastSelection) {
       return this.manualSpellCastSelection.attackRange;
     }
-    if (this.equipment.weapon) {
-      return this.equipment.weapon.attackRange;
-    }
-    return 1;
+    const base = this.equipment.weapon ? this.equipment.weapon.attackRange : 1;
+    return Math.max(1, base - this.attackRangePenalty);
+  }
+
+  override modifyIncomingDamage(damage: number, projectile: Projectile): number {
+    return this.incomingDamageModifiers.reduce((current, modifier) => modifier(current, projectile), damage);
   }
 
   get attackSpeed() {
@@ -842,8 +852,9 @@ export class Player extends Unit {
     return damaged ? new Sound(HumanHit, 0.1) : new Sound(LeatherHit, 0.15);
   }
 
-  damageTaken() {
+  damageTaken(damage = 0) {
     this.prayerController.checkRedemption(this);
+    this.damageTakenListeners.forEach((listener) => listener(damage));
   }
 
   pretick() {
