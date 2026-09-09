@@ -176,12 +176,16 @@ export class Player extends Unit {
   }
 
   /** Amulet of blood fury: 20% of damaging melee hits heal 30% of the damage. */
+  /** performance.now() of the last blood-fury proc; drives a brief overhead flash. */
+  private bloodFuryFlashAt = 0;
+
   override dealtDamage(damage: number, projectile: Projectile, _target: Unit) {
     if (damage <= 0) return;
     if (this.equipment.necklace?.itemName !== ItemName.AMULET_OF_BLOOD_FURY) return;
     if (!(projectile.weapon instanceof MeleeWeapon)) return;
     if (Random.get() >= 0.2) return;
     this.currentStats.hitpoint = Math.min(this.stats.hitpoint, this.currentStats.hitpoint + Math.floor(damage * 0.3));
+    this.bloodFuryFlashAt = window.performance.now();
   }
 
   override modifyIncomingDamage(damage: number, projectile: Projectile): number {
@@ -1032,6 +1036,43 @@ export class Player extends Unit {
     context.translate(hitsplatPosition.x, hitsplatPosition.y);
     if (Settings.rotated === "south") context.rotate(Math.PI);
     this.drawHitsplats(context, scale);
+    context.restore();
+
+    this.drawBloodFuryFlash(context, scale, overheadPosition);
+  }
+
+  /**
+   * A small red spiral that fades over ~0.65s above the head when blood fury
+   * procs - a subtle "it fired" cue, kept clear of the HP bar and hitsplats.
+   */
+  private drawBloodFuryFlash(
+    context: OffscreenCanvasRenderingContext2D,
+    scale: number,
+    overheadPosition: { x: number; y: number },
+  ) {
+    const DURATION = 650;
+    const elapsed = window.performance.now() - this.bloodFuryFlashAt;
+    if (this.bloodFuryFlashAt === 0 || elapsed < 0 || elapsed > DURATION) {
+      return;
+    }
+    const t = elapsed / DURATION;
+    context.save();
+    context.translate(overheadPosition.x, overheadPosition.y - 0.7 * scale);
+    context.globalAlpha = (1 - t) * 0.8;
+    context.strokeStyle = "#d61b1b";
+    context.lineWidth = 2;
+    context.rotate(t * Math.PI * 1.5);
+    context.beginPath();
+    const maxAngle = 2.3 * Math.PI * 2;
+    const maxR = 0.34 * scale;
+    for (let a = 0; a <= maxAngle; a += 0.25) {
+      const r = (a / maxAngle) * maxR;
+      const px = Math.cos(a) * r;
+      const py = Math.sin(a) * r;
+      if (a === 0) context.moveTo(px, py);
+      else context.lineTo(px, py);
+    }
+    context.stroke();
     context.restore();
   }
 
