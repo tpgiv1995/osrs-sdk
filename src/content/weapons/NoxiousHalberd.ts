@@ -54,6 +54,11 @@ export class NoxiousHalberd extends MeleeWeapon {
     return [AttackStyle.STAB, AttackStyle.AGGRESSIVESLASH, AttackStyle.DEFENSIVE];
   }
 
+  override meleeAttackType(): "stab" | "slash" | "crush" {
+    // Jab and Fend are stab; only Swipe (aggressive) is slash.
+    return this.attackStyle() === AttackStyle.AGGRESSIVESLASH ? "slash" : "stab";
+  }
+
   attackStyleCategory(): AttackStyleTypes {
     return AttackStyleTypes.POLEARM;
   }

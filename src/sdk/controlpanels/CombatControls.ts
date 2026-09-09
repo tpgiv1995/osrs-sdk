@@ -87,7 +87,7 @@ export class CombatControls extends BaseControls {
     context: CanvasRenderingContext2D,
     weapon: Weapon,
     attackStyle: AttackStyle,
-    attackStyleImage: HTMLImageElement,
+    attackStyleImage: HTMLImageElement | undefined,
     x: number,
     y: number,
   ) {
@@ -104,13 +104,17 @@ export class CombatControls extends BaseControls {
       currentAttackStyleImage.height * scale,
     );
 
-    context.drawImage(
-      attackStyleImage,
-      x + (35 - Math.floor(attackStyleImage.width / 2)) * scale,
-      y + 5 * scale,
-      attackStyleImage.width * scale,
-      attackStyleImage.height * scale,
-    );
+    // Weapon types without dedicated style art (e.g. polearms) still get a
+    // labelled, selectable button - just without the little glyph.
+    if (attackStyleImage) {
+      context.drawImage(
+        attackStyleImage,
+        x + (35 - Math.floor(attackStyleImage.width / 2)) * scale,
+        y + 5 * scale,
+        attackStyleImage.width * scale,
+        attackStyleImage.height * scale,
+      );
+    }
 
     context.font = 16 * scale + "px Stats_11";
     context.textAlign = "center";
@@ -152,23 +156,17 @@ export class CombatControls extends BaseControls {
     const attackStyles = weapon.attackStyles();
 
     const imageMap = AttackStylesController.attackStyleImageMap[weapon.attackStyleCategory()];
-    if (imageMap) {
-      attackStyles.forEach((style: AttackStyle, index: number) => {
-        const offsets = attackStyleOffsets[index];
-
-        const attackStyleImage = imageMap[weapon.attackStyles()[index]];
-        if (attackStyleImage) {
-          this.drawAttackStyleButton(
-            context,
-            weapon,
-            weapon.attackStyles()[index],
-            attackStyleImage,
-            x + offsets.x * scale,
-            y + offsets.y * scale,
-          );
-        }
-      });
-    }
+    attackStyles.forEach((style: AttackStyle, index: number) => {
+      const offsets = attackStyleOffsets[index];
+      this.drawAttackStyleButton(
+        context,
+        weapon,
+        style,
+        imageMap?.[style],
+        x + offsets.x * scale,
+        y + offsets.y * scale,
+      );
+    });
 
     const autoRetailateImage = Trainer.player.autoRetaliate
       ? this.selectedAutoRetailButtonImage

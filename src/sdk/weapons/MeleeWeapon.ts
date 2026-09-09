@@ -1,4 +1,4 @@
-import { AttackStylesController } from "../AttackStylesController";
+import { AttackStyle, AttackStylesController } from "../AttackStylesController";
 import { PrayerGroups } from "../BasePrayer";
 import { EquipmentTypes } from "../Equipment";
 import { Weapon, AttackBonuses } from "../gear/Weapon";
@@ -22,8 +22,26 @@ export class MeleeWeapon extends Weapon {
   }
 
   attack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}): boolean {
-    bonuses.attackStyle = bonuses.attackStyle || "slash";
+    bonuses.attackStyle = bonuses.attackStyle || this.meleeAttackType();
     return super.attack(from, to, bonuses, options);
+  }
+
+  /**
+   * The stab/slash/crush type (drives accuracy and defence rolls) implied by the
+   * currently selected attack style. Weapons whose defensive/controlled style
+   * uses a different type - e.g. a halberd's Fend is a stab - override this.
+   */
+  meleeAttackType(): "stab" | "slash" | "crush" {
+    switch (this.attackStyle()) {
+      case AttackStyle.STAB:
+        return "stab";
+      case AttackStyle.AGGRESSIVECRUSH:
+        return "crush";
+      case AttackStyle.AGGRESSIVESLASH:
+        return "slash";
+      default:
+        return "slash";
+    }
   }
 
   _calculatePrayerEffects(from: Unit, to: Unit, bonuses: AttackBonuses) {
