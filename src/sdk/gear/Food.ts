@@ -1,4 +1,5 @@
 import { Item } from "../Item";
+import { V3Rules } from "../V3Rules";
 import { ImageLoader } from "../utils/ImageLoader";
 import { Player } from "../Player";
 
@@ -13,7 +14,9 @@ export class Food extends Item {
   }
 
   eat(player: Player) {
-    player.interruptCombat();
+    if (!V3Rules.calculator) {
+      player.interruptCombat();
+    }
     if (player.currentStats.hitpoint < player.stats.hitpoint) {
       player.currentStats.hitpoint += this.healAmount;
       player.currentStats.hitpoint = Math.min(player.currentStats.hitpoint, player.stats.hitpoint);

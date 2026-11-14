@@ -21,9 +21,14 @@ export class BloodBarrageSpell extends BarrageSpell {
     return ItemName.BLOOD_BARRAGE;
   }
 
+  get baseDamage(): number {
+    return 29;
+  }
+
   attack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}): boolean {
     super.attack(from, to, bonuses, options);
-    // The Blood ancient sceptre lets Blood spells overheal up to 10% over base Hitpoints (99 -> 108).
+    // Life leech (wiki): 25% of the damage the spell would do, 27.5% with the sceptre, even on a target with little
+    // Hitpoints left. The Blood ancient sceptre also lets Blood spells overheal up to 10% over base Hitpoints (99 -> 108).
     const weapon = from.equipment && from.equipment.weapon;
     const overheal =
       V3Rules.calculator && weapon && weapon.itemName === ItemName.BLOOD_ANCIENT_SCEPTRE
@@ -31,7 +36,8 @@ export class BloodBarrageSpell extends BarrageSpell {
         : 0;
     const ceiling = from.stats.hitpoint + overheal;
     if (from.currentStats.hitpoint < ceiling) {
-      from.currentStats.hitpoint += Math.floor(this.damageRoll * 0.25);
+      const permille = V3Rules.calculator && overheal > 0 ? 275 : 250;
+      from.currentStats.hitpoint += Math.floor((this.damageRoll * permille) / 1000);
       from.currentStats.hitpoint = Math.max(Math.min(ceiling, from.currentStats.hitpoint), 0);
     }
     return true;

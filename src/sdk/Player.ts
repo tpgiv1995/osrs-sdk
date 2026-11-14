@@ -183,7 +183,9 @@ export class Player extends Unit {
   }
 
   equipmentChanged() {
-    this.interruptCombat();
+    if (!V3Rules.calculator) {
+      this.interruptCombat();
+    }
 
     const gear = [
       this.equipment.weapon,
@@ -370,8 +372,11 @@ export class Player extends Unit {
   attack(): boolean {
     if (this.manualSpellCastSelection) {
       const target = this.aggro;
-      this.manualSpellCastSelection.cast(this, target);
+      const cast = this.manualSpellCastSelection.cast(this, target);
       this.manualSpellCastSelection = null;
+      if (cast === false) {
+        return false; // refused (no runes): no attack, the timer is not reset
+      }
       this.interruptCombat();
       this.destinationLocation = this.location;
     } else {

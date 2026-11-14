@@ -39,6 +39,8 @@ export interface AttackBonuses {
   overallMultiplier?: number;
   effectivePrayers?: EffectivePrayers;
   isSpecialAttack?: boolean;
+  /** Barrage targets other than the primary: Confliction gauntlets neither use nor set their state on these. */
+  isSecondaryTarget?: boolean;
 }
 
 export class Weapon extends Equipment {
@@ -74,7 +76,9 @@ export class Weapon extends Equipment {
 
   override assignToPlayer(player: Player) {
     player.equipment.weapon = this;
-    player.interruptCombat();
+    if (!V3Rules.calculator) {
+      player.interruptCombat();
+    }
   }
 
   override unassignToPlayer(player: Player) {
@@ -118,7 +122,7 @@ export class Weapon extends Equipment {
     }
     // A two-hander swaps the weapon into its own slot, but the worn offhand needs a second free slot.
     // Without this a full inventory silently lost the offhand.
-    if (this.isTwoHander && currentWeapon && currentOffhand && openInventorySlots.length < 2) {
+    if (V3Rules.calculator && this.isTwoHander && currentWeapon && currentOffhand && openInventorySlots.length < 2) {
       return;
     }
     this.assignToPlayer(player);
@@ -135,7 +139,8 @@ export class Weapon extends Equipment {
     player.equipmentChanged();
   }
 
-  cast(from: Unit, to: Unit) {
+  /** Returns false when the cast was refused (no runes); spells otherwise return true. */
+  cast(from: Unit, to: Unit): boolean | void {
     // Override me
   }
 

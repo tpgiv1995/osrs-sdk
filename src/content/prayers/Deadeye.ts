@@ -9,7 +9,8 @@ export class Deadeye extends BasePrayer {
   }
 
   get groups() {
-    return [PrayerGroups.ACCURACY, PrayerGroups.STRENGTH, PrayerGroups.DEFENCE];
+    // No DEFENCE group: Mystic Vigour and Deadeye stack with the skin prayers (wiki), their +5% Defence adds.
+    return [PrayerGroups.ACCURACY, PrayerGroups.STRENGTH];
   }
 
   levelRequirement(): number {

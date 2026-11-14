@@ -78,6 +78,34 @@ export const PRAYER_FACTORS: Record<string, PrayerFactor> = {
   Piety: { dfn: 25 },
 };
 
+/** Prayers that the Royal Titans scrolls permanently swap into the book (wiki "Prayer"). */
+export const PRAYER_BOOK_OVERRIDES: Record<string, string> = {
+  "Eagle Eye": "Deadeye",
+  "Mystic Might": "Mystic Vigour",
+};
+
+/** Rune costs (OSRS Wiki infoboxes). */
+export const SPELL_RUNE_COSTS: Record<string, Record<string, number>> = {
+  "Ice Barrage": { Water: 6, Death: 4, Blood: 2 },
+  "Blood Barrage": { Death: 4, Blood: 4, Soul: 1 },
+};
+
+/**
+ * Pays a spell's runes from the caster's rune pouch. With no pouch in the inventory the cast is free (upstream
+ * loadouts); with one, it returns false at zero and nothing is spent.
+ */
+export function spendSpellRunes(caster: Unit, spell: string): boolean {
+  const cost = SPELL_RUNE_COSTS[spell];
+  const inventory = (caster as unknown as { inventory?: unknown[] }).inventory;
+  if (!cost || !inventory) {
+    return true;
+  }
+  const pouch = inventory.find((i) => i && typeof (i as { spendRunes?: unknown }).spendRunes === "function") as
+    | { spendRunes: (c: Record<string, number>) => boolean }
+    | undefined;
+  return pouch ? pouch.spendRunes(cost) : true;
+}
+
 export function prayerFactor(prayer: BasePrayer | undefined | null): PrayerFactor {
   return (prayer && PRAYER_FACTORS[prayer.name]) || {};
 }
@@ -89,7 +117,8 @@ export function playerDefenceRoll(
   stanceBonus = 0,
 ): number {
   const active: BasePrayer[] = player.prayerController ? player.prayerController.activePrayers() : [];
-  const dfn = active.reduce((best, p) => Math.max(best, prayerFactor(p).dfn || 0), 0);
+  // Defence boosts add: Steel Skin (15) + Mystic Vigour (5) = +20%. Conflicting prayers cannot be active together.
+  const dfn = active.reduce((sum, p) => sum + (prayerFactor(p).dfn || 0), 0);
   let effective = fac(player.currentStats.defence, 100 + dfn);
   if (style === "magic") {
     const mdef = active.reduce((best, p) => prayerFactor(p).mdef || best, 100);
@@ -117,10 +146,11 @@ export function playerStanceDefenceBonus(player: Unit): number {
 }
 
 /**
- * Confliction gauntlets: after a missed one-handed magic attack on a target, the next magic attack on that
- * target rolls accuracy twice and keeps the better roll. The state is per target.
+ * Confliction gauntlets (wiki): after a missed magic attack, the next magic attack of that weapon or spell against
+ * the same enemy rolls accuracy twice. Multi-target spells only use and set it on the primary target. It does not
+ * apply with a two-handed weapon. State per target: the weapon or spell whose attack missed last, or null.
  */
-const conflictionMissed = new WeakMap<Unit, boolean>();
+const conflictionMissed = new WeakMap<Unit, string | null>();
 
 export function conflictionActive(from: Unit): boolean {
   const weapon = from.equipment && from.equipment.weapon;
@@ -128,15 +158,16 @@ export function conflictionActive(from: Unit): boolean {
     from.isPlayer === true &&
     !!from.equipment.gloves &&
     from.equipment.gloves.itemName === ItemName.CONFLICTION_GAUNTLETS &&
-    !!weapon &&
-    !weapon.isTwoHander
+    (!weapon || !weapon.isTwoHander)
   );
 }
 
-export function conflictionIsArmed(target: Unit): boolean {
-  return conflictionMissed.get(target) === true;
+/** True when the last magic attack on this target missed and was made with the same weapon or spell. */
+export function conflictionIsArmed(target: Unit, attackName: string): boolean {
+  return conflictionMissed.get(target) === attackName;
 }
 
-export function setConflictionArmed(target: Unit, armed: boolean) {
-  conflictionMissed.set(target, armed);
+/** Records the last magic attack on the target: the attack's name after a miss, null after a hit. */
+export function setConflictionState(target: Unit, missedWith: string | null) {
+  conflictionMissed.set(target, missedWith);
 }

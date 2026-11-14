@@ -2,7 +2,7 @@ jest.unmock("../../src/sdk/ControlPanelController");
 
 import { ControlPanelController } from "../../src/sdk/ControlPanelController";
 import { PrayerControls } from "../../src/sdk/controlpanels/PrayerControls";
-import { V3_PRAYER_LAYOUT } from "../../src/sdk/controlpanels/PrayerLayouts";
+import { V3_PRAYER_LAYOUT, V3_INFERNO_PRAYER_LAYOUT } from "../../src/sdk/controlpanels/PrayerLayouts";
 import { Player } from "../../src/sdk/Player";
 import { Settings } from "../../src/sdk/Settings";
 import { Trainer } from "../../src/sdk/Trainer";
@@ -82,5 +82,47 @@ describe("V3 prayer book layout", () => {
     expect(slots).toHaveLength(29);
     expect(slots[0]?.name).toBe("Thick Skin");
     Settings.prayerLayout = [...V3_PRAYER_LAYOUT];
+  });
+
+  test("the V3 Inferno book shows Deadeye and Mystic Vigour in place of Eagle Eye and Mystic Might, no duplicates", () => {
+    Settings.prayerLayout = [...V3_INFERNO_PRAYER_LAYOUT];
+    const names = controls.slotPrayers().map((p) => p?.name ?? null);
+    expect(names[1]).toBe("Mystic Vigour");
+    expect(names[6]).toBe("Deadeye"); // Eagle Eye's slot in the reference book
+    expect(names).not.toContain("Eagle Eye");
+    expect(names).not.toContain("Mystic Might");
+    const shown = names.filter(Boolean) as string[];
+    expect(new Set(shown).size).toBe(shown.length);
+    // a saved layout that still names the old prayers is swapped, not duplicated
+    Settings.prayerLayout = [...V3_INFERNO_PRAYER_LAYOUT];
+    Settings.prayerLayout[2] = "Eagle Eye";
+    Settings.prayerLayout[3] = "Mystic Might";
+    const swapped = controls.slotPrayers().map((p) => p?.name ?? null);
+    expect(swapped.filter((n) => n === "Deadeye")).toHaveLength(1);
+    expect(swapped.filter((n) => n === "Mystic Vigour")).toHaveLength(1);
+    Settings.prayerLayout = [...V3_PRAYER_LAYOUT];
+  });
+
+  test("the stock book also swaps them into Eagle Eye's and Mystic Might's slots", () => {
+    Settings.prayerLayout = null;
+    const names = controls.slotPrayers().map((p) => p?.name);
+    expect(names).toHaveLength(29);
+    expect(names[19]).toBe("Deadeye");
+    expect(names[20]).toBe("Mystic Vigour");
+    expect(names).not.toContain("Eagle Eye");
+    expect(names).not.toContain("Mystic Might");
+    Settings.prayerLayout = [...V3_PRAYER_LAYOUT];
+  });
+
+  test("default quick prayers are Protect from Magic and Mystic Vigour (no Rigour)", () => {
+    player.currentStats.prayer = 93;
+    player.stats.prayer = 93;
+    controls.deactivateAllPrayers();
+    player.prayerController.prayers.forEach((p) => p.tick());
+    controls.activateQuickPrayers();
+    player.prayerController.prayers.forEach((p) => p.tick());
+    expect(player.prayerController.activePrayers().map((p) => p.name).sort()).toEqual(["Mystic Vigour", "Protect from Magic"]);
+    controls.deactivateAllPrayers();
+    player.prayerController.prayers.forEach((p) => p.tick());
   });
 });

@@ -73,6 +73,11 @@ export class Item {
     return 0;
   }
 
+  /** Optional small text drawn over the inventory icon (e.g. the rune pouch's casts left). */
+  get overlayText(): string | null {
+    return null;
+  }
+
   inventoryPosition(player: Player): number {
     return player.inventory
       .map((item: Item) => {

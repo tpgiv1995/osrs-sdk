@@ -4,6 +4,7 @@ import PrayerTab from "../../assets/images/tabs/prayer.png";
 import { ImageLoader } from "../utils/ImageLoader";
 import type { BasePrayer } from "../BasePrayer";
 import { PRAYER_BOOK_ICONS } from "./PrayerBookIcons";
+import { PRAYER_BOOK_OVERRIDES, V3Rules } from "../V3Rules";
 import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS, PRAYER_LAYOUT_ROWS } from "./PrayerLayouts";
 import { BaseControls } from "./BaseControls";
 import { Settings } from "../Settings";
@@ -31,9 +32,20 @@ export class PrayerControls extends BaseControls {
   slotPrayers(): (BasePrayer | null)[] {
     const prayers = Trainer.player.prayerController.prayers;
     const layout = Settings.prayerLayout;
-    // The stock panel has 29 drawn slots; Mystic Vigour and Deadeye (appended) only exist in custom layouts.
-    if (!isValidPrayerLayout(layout)) return prayers.slice(0, 29);
-    return layout.map((name) => (name ? prayers.find((prayer) => prayer.name === name) ?? null : null));
+    const find = (name: string) => prayers.find((prayer) => prayer.name === name) ?? null;
+    // Unlocked Deadeye / Mystic Vigour permanently replace Eagle Eye / Mystic Might (V3 rules).
+    const swap = (name: string) => (V3Rules.calculator && PRAYER_BOOK_OVERRIDES[name]) || name;
+    if (!isValidPrayerLayout(layout)) {
+      // The stock panel has 29 drawn slots; the two new prayers (appended) take over their lower versions' slots.
+      return prayers.slice(0, 29).map((prayer) => find(swap(prayer.name)));
+    }
+    const seen = new Set<string>();
+    return layout.map((name) => {
+      const prayer = name ? find(swap(name)) : null;
+      if (!prayer || seen.has(prayer.name)) return null;
+      seen.add(prayer.name);
+      return prayer;
+    });
   }
 
   /** Panel-relative slot origin in unscaled panel pixels; the drawn icon is 37x37 from here. */
@@ -89,7 +101,7 @@ export class PrayerControls extends BaseControls {
       if (prayer.name === "Protect from Magic") {
         prayer.activate(Trainer.player);
       }
-      if (prayer.name === "Rigour") {
+      if (V3Rules.calculator ? prayer.name === "Mystic Vigour" : prayer.name === "Rigour") {
         prayer.activate(Trainer.player);
       }
     });
@@ -134,7 +146,9 @@ export class PrayerControls extends BaseControls {
       const x2 = index % PRAYER_LAYOUT_COLUMNS;
       const y2 = Math.floor(index / PRAYER_LAYOUT_COLUMNS);
 
-      if (customLayout) {
+      // The stock panel image has Eagle Eye / Mystic Might baked in: draw the replacement icons over them.
+      const replaced = !customLayout && Object.values(PRAYER_BOOK_OVERRIDES).includes(prayer.name);
+      if (customLayout || replaced) {
         const icon = this.bookIcons[prayer.name];
         if (icon) {
           const origin = PrayerControls.slotOrigin(index);

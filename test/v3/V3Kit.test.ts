@@ -5,7 +5,7 @@ import { TestNpc } from "../../src/sdk/testing/TestNpc";
 import { Random } from "../../src/sdk/Random";
 import { AttackBonuses } from "../../src/sdk/gear/Weapon";
 import { AttackStyle, AttackStylesController } from "../../src/sdk/AttackStylesController";
-import { V3Rules, fangRoll, setConflictionArmed, stdRoll } from "../../src/sdk/V3Rules";
+import { V3Rules, fangRoll, setConflictionState, stdRoll } from "../../src/sdk/V3Rules";
 import { RangedWeapon } from "../../src/sdk/weapons/RangedWeapon";
 import { BloodBarrageSpell } from "../../src/sdk/weapons/BloodBarrageSpell";
 import { EyeOfAyak } from "../../src/content/weapons/EyeOfAyak";
@@ -175,7 +175,7 @@ describe("V3 Inferno kit: calculator parity", () => {
     expect(eye.lastHitHit).toBe(true);
     expect(eye._hitChance(player, target, bonuses)).toBeCloseTo(stdRoll(a, d), 12);
     // without the gauntlets the state does nothing
-    setConflictionArmed(target, true);
+    setConflictionState(target, "Eye of Ayak");
     player.equipment.gloves = null;
     player.equipmentChanged();
     const a2 = eye._attackRoll(player, target, bonuses);
@@ -256,11 +256,11 @@ describe("V3 Inferno kit: calculator parity", () => {
     player.currentStats.hitpoint = 99;
     Random.setRandom(sequence(0.01, 0.99));
     const blood = new BloodBarrageSpell();
-    blood.attack(player, target, { magicBaseSpellDamage: 30, attackStyle: "magic" });
+    blood.attack(player, target, { magicBaseSpellDamage: 29, attackStyle: "magic" });
     expect(player.currentStats.hitpoint).toBeGreaterThan(99);
     expect(player.currentStats.hitpoint).toBeLessThanOrEqual(108);
     for (let i = 0; i < 20; i++) {
-      blood.attack(player, target, { magicBaseSpellDamage: 30, attackStyle: "magic" });
+      blood.attack(player, target, { magicBaseSpellDamage: 29, attackStyle: "magic" });
     }
     expect(player.currentStats.hitpoint).toBe(108);
     Random.setRandom(() => Math.random());

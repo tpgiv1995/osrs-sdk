@@ -4,7 +4,7 @@ import { ProjectileOptions } from "./Projectile";
 import { AttackBonuses, Weapon } from "../gear/Weapon";
 import { EquipmentTypes } from "../Equipment";
 import { PrayerGroups } from "../BasePrayer";
-import { V3Rules, mulFloor, fac, fangRoll, stdRoll, prayerFactor, playerDefenceRoll, playerStanceDefenceBonus, conflictionActive, conflictionIsArmed, setConflictionArmed } from "../V3Rules";
+import { V3Rules, mulFloor, fac, fangRoll, stdRoll, prayerFactor, playerDefenceRoll, playerStanceDefenceBonus, conflictionActive, conflictionIsArmed, setConflictionState } from "../V3Rules";
 
 export class MagicWeapon extends Weapon {
 
@@ -54,7 +54,7 @@ export class MagicWeapon extends Weapon {
   }
 
   _v3HitChance(from: Unit, to: Unit, attackRoll: number, defenceRoll: number, bonuses: AttackBonuses) {
-    if (conflictionActive(from) && conflictionIsArmed(to)) {
+    if (!bonuses.isSecondaryTarget && conflictionActive(from) && conflictionIsArmed(to, String(this.itemName))) {
       return fangRoll(attackRoll, defenceRoll);
     }
     return stdRoll(attackRoll, defenceRoll);
@@ -62,8 +62,8 @@ export class MagicWeapon extends Weapon {
 
   _rollAttack(from: Unit, to: Unit, bonuses: AttackBonuses) {
     const damage = super._rollAttack(from, to, bonuses);
-    if (V3Rules.calculator && conflictionActive(from)) {
-      setConflictionArmed(to, !this.lastHitHit);
+    if (V3Rules.calculator && !bonuses.isSecondaryTarget && conflictionActive(from)) {
+      setConflictionState(to, this.lastHitHit ? null : String(this.itemName));
     }
     return damage;
   }

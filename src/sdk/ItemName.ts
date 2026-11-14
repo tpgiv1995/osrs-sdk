@@ -14,7 +14,7 @@ export enum ItemName {
   BLOOD_ANCIENT_SCEPTRE = "Blood ancient sceptre",
   SATURATED_HEART = "Saturated heart",
   PRAYER_REGENERATION_POTION = "Prayer regeneration potion",
-  RUNE_POUCH = "Rune pouch",
+  DIVINE_RUNE_POUCH_L = "Divine rune pouch (l)",
   BLOOD_BARRAGE = "Blood Barrage",
   ICE_BARRAGE = "Ice Barrage",
   AHRIMS_ROBETOP = "Ahrim's robetop",

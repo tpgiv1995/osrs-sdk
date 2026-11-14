@@ -21,7 +21,6 @@ export class SaturatedHeart extends Item {
   }
 
   inventoryLeftClick(player: Player) {
-    player.interruptCombat();
     player.useSaturatedHeart();
   }
 

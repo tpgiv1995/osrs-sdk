@@ -1,5 +1,6 @@
 import Vial from "../../assets/images/potions/Vial.png";
 import { Item } from "../Item";
+import { V3Rules } from "../V3Rules";
 import { Player } from "../Player";
 import { ImageLoader } from "../utils/ImageLoader";
 
@@ -16,7 +17,10 @@ export class Potion extends Item {
     this.defaultAction = "Drink";
   }
   drink(player: Player) {
-    player.interruptCombat();
+    // Potions have no attack delay: in the V3 rules drinking keeps the current target.
+    if (!V3Rules.calculator) {
+      player.interruptCombat();
+    }
   }
 
   get weight(): number {

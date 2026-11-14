@@ -233,6 +233,18 @@ export class InventoryControls extends BaseControls {
           context.drawImage(sprite, itemX + xOff, itemY + yOff, sprite.width * scale, sprite.height * scale);
         }
 
+        const overlay = inventoryItem.overlayText;
+        if (overlay) {
+          context.save();
+          context.font = `${Math.round(11 * scale)}px Stats_11, OSRS, sans-serif`;
+          context.textAlign = "left";
+          context.fillStyle = "#000";
+          context.fillText(overlay, itemX + 1 * scale + 1, itemY + 10 * scale + 1);
+          context.fillStyle = "#ffff00";
+          context.fillText(overlay, itemX + 1 * scale, itemY + 10 * scale);
+          context.restore();
+        }
+
         if (inventoryItem.selected) {
           context.beginPath();
           context.fillStyle = "#D1BB7773";

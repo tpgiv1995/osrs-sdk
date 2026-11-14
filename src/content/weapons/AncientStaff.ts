@@ -50,8 +50,7 @@ export class AncientStaff extends MeleeWeapon {
   attack(from: Unit, to: Unit, bonuses: AttackBonuses = {}): boolean {
     if (this.attackStyle() === AttackStyle.AUTOCAST) {
       if (from.isPlayer) {
-        this.autocastSpell.cast(from, to);
-        return true;
+        return this.autocastSpell.cast(from, to) !== false;
       }
     }
 

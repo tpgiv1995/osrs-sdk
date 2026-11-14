@@ -17,10 +17,14 @@ export const V3_PRAYER_LAYOUT: PrayerLayout = [
   "", "", "Incredible Reflexes", "Ultimate Strength", "",
 ];
 
-/** The V3 Inferno Sim book: Mystic Vigour takes Augury's slot, Deadeye and Mystic Might sit beside it, Eagle Eye stays. */
+/**
+ * The V3 Inferno Sim book. Deadeye and Mystic Vigour permanently replace Eagle Eye and Mystic Might (wiki), so the
+ * book holds Deadeye in Eagle Eye's slot and Mystic Vigour where Mystic Might would sit (Augury's old slot here,
+ * the account has no Augury). No duplicates.
+ */
 export const V3_INFERNO_PRAYER_LAYOUT: PrayerLayout = [
-  "Protect from Range", "Mystic Vigour", "Deadeye", "Mystic Might", "",
-  "Protect from Magic", "Eagle Eye", "Steel Skin", "", "Rapid Heal",
+  "Protect from Range", "Mystic Vigour", "", "", "",
+  "Protect from Magic", "Deadeye", "Steel Skin", "Rock Skin", "Rapid Heal",
   "Protect from Melee", "Piety", "", "", "Rapid Restore",
   "", "", "", "", "Retribution",
   "", "", "Protect Item", "Redemption", "Smite",

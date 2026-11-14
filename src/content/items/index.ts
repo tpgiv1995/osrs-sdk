@@ -8,7 +8,7 @@ export { StaminaPotion } from './StaminaPotion';
 export { SuperCombatPotion } from './SuperCombatPotion';
 export { SuperRestore } from './SuperRestore';
 export { SaturatedHeart } from './SaturatedHeart';
-export { RunePouch } from './RunePouch';
+export { DivineRunePouch } from './DivineRunePouch';
 export { DivineRangingPotion } from './DivineRangingPotion';
 export { RangingPotion } from './RangingPotion';
 export { PrayerRegenerationPotion } from './PrayerRegenerationPotion';
