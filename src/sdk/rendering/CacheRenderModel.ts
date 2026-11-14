@@ -535,7 +535,7 @@ export class CacheRenderModel implements Model, RenderableListener {
         geometry.setAttribute("position", new THREE.Float32BufferAttribute(spotPayload.positions, 3));
         if (spotPayload.colors && spotPayload.colors.length * 3 === spotPayload.positions.length) {
           const values: number[] = [];
-          spotPayload.colors.forEach((value, index) => { const color = new THREE.Color(value); values.push(color.r, color.g, color.b, 1 - (spotPayload.alphas?.[index] ?? 0) / 255); });
+          spotPayload.colors.forEach((value, index) => { const color = new THREE.Color(value); values.push(color.r, color.g, color.b, Math.min(1 - (spotPayload.alphas?.[index] ?? 0) / 255, this.activeSpotAnims[0]?.opacityCap ?? 1)); });
           geometry.setAttribute("color", new THREE.Float32BufferAttribute(values, 4));
         }
         geometry.setIndex(spotPayload.indices ?? []);
@@ -807,7 +807,7 @@ export class CacheRenderModel implements Model, RenderableListener {
               const rgb = new THREE.Color(baseColors[i]);
               color.array[i * 4] = rgb.r; color.array[i * 4 + 1] = rgb.g; color.array[i * 4 + 2] = rgb.b;
             }
-            color.array[i * 4 + 3] = 1 - alphaValues[i] / 255;
+            color.array[i * 4 + 3] = Math.min(1 - alphaValues[i] / 255, placement?.opacityCap ?? 1);
           }
           color.needsUpdate = true;
         }

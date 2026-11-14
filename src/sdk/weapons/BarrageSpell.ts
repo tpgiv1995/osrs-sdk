@@ -46,6 +46,14 @@ export class BarrageSpell extends MagicWeapon {
   }
 
   /**
+   * The ice column is one flat colour, drawn unlit it would be a solid slab hiding the monsters; cap its opacity so the
+   * target stays visible through it.
+   */
+  get impactOpacityCap(): number | undefined {
+    return 0.4;
+  }
+
+  /**
    * V3: the barrages have no projectile in the game, only an impact graphic on each target when the spell lands
    * (the splash graphic when it does no damage), on the same tick the damage applies.
    */
@@ -55,7 +63,7 @@ export class BarrageSpell extends MagicWeapon {
       to,
       bonuses,
       withImpact({ ...(v3GraphicsEnabled() ? { hidden: true } : {}), ...options }, (projectile) =>
-        spawnGraphic(to, projectile.damage > 0 ? this.impactSpotAnim : PLAYER_CACHE_SPOTANIMS.splash, 0),
+        spawnGraphic(to, projectile.damage > 0 ? this.impactSpotAnim : PLAYER_CACHE_SPOTANIMS.splash, 0, this.impactOpacityCap),
       ),
     );
   }

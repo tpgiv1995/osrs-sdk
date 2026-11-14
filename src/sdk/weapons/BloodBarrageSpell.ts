@@ -22,6 +22,10 @@ export class BloodBarrageSpell extends BarrageSpell {
     return ItemName.BLOOD_BARRAGE;
   }
 
+  override get impactOpacityCap(): number | undefined {
+    return undefined;
+  }
+
   override get impactSpotAnim(): number {
     return PLAYER_CACHE_SPOTANIMS.bloodBarrageImpact;
   }

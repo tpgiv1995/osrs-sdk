@@ -26,10 +26,10 @@ function centre(unit: Unit): Location {
  * Plays a cache graphic once at a unit (the client's "spotanim on an actor"). `height` is in tile units above the
  * unit's feet. Does nothing unless the V3 graphics are enabled.
  */
-export function spawnGraphic(at: Unit, spotAnimId: number, height = 0): GraphicsObject | null {
+export function spawnGraphic(at: Unit, spotAnimId: number, height = 0, opacityCap?: number): GraphicsObject | null {
   if (!v3GraphicsEnabled() || !at.region) return null;
   if (V3GraphicsLog.enabled) V3GraphicsLog.graphics.push({ id: spotAnimId, height });
-  const graphic = new GraphicsObject(at.region, centre(at), spotAnimId, { height });
+  const graphic = new GraphicsObject(at.region, centre(at), spotAnimId, { height, ...(opacityCap !== undefined ? { opacityCap } : {}) });
   at.region.addEntity(graphic);
   return graphic;
 }

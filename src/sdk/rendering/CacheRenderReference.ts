@@ -21,6 +21,8 @@ export type CacheRenderSpotAnim = {
   offset?: { x: number; y: number };
   delay?: number;
   rotation?: number;
+  /** Highest opacity (0..1) any face of this effect may have. Keeps large single-colour effects see-through. */
+  opacityCap?: number;
   /** Optional mapping from cache HSL face colours to Three.js RGB values. */
   recolor?: Record<string, number>;
 };

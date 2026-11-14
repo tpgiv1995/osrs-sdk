@@ -13,6 +13,8 @@ export interface GraphicsObjectOptions {
   delay?: number;
   /** Additional cache-angle rotation, where 2048 units is one turn. */
   rotation?: number;
+  /** Highest opacity (0..1) any face may have. */
+  opacityCap?: number;
   /** Optional mapping from cache HSL face colours to Three.js RGB values. */
   recolor?: Record<string, number>;
 }
