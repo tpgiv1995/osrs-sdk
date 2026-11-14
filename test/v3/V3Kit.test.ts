@@ -29,6 +29,7 @@ import { NecklaceOfRupture } from "../../src/content/equipment/NecklaceOfRupture
 import { SaturatedHeart } from "../../src/content/items/SaturatedHeart";
 import { SaradominBrew } from "../../src/content/items/SaradominBrew";
 import { BastionPotion } from "../../src/content/items/BastionPotion";
+import { DivineRangingPotion } from "../../src/content/items/DivineRangingPotion";
 import { PrayerRegenerationPotion } from "../../src/content/items/PrayerRegenerationPotion";
 
 /* Every expected number below is printed by osrs-advisor/tools/inferno_gear.py (python -I inferno_gear.py). */
@@ -299,6 +300,24 @@ describe("V3 Inferno kit: calculator parity", () => {
     new BastionPotion().drink(player);
     expect(player.currentStats.range).toBe(112);
     expect(player.currentStats.defence).toBe(118);
+  });
+
+  test("Divine ranging potion: Ranged 112, costs 10 HP, holds through a Saradomin brew for 5 minutes", () => {
+    const { player } = makePlayer();
+    new DivineRangingPotion().drink(player);
+    expect(player.currentStats.range).toBe(112);
+    expect(player.currentStats.hitpoint).toBe(89);
+    new SaradominBrew().drink(player);
+    expect(player.currentStats.range).toBe(112); // the brew's drain cannot pull it below the held level
+    expect(player.currentStats.defence).toBeGreaterThan(99);
+    for (let i = 0; i < 499; i++) player.v3Tick();
+    expect(player.currentStats.range).toBe(112);
+    player.v3Tick();
+    expect(player.currentStats.range).toBe(99);
+    // a plain brew with no divine potion does drain Ranged
+    const other = makePlayer().player;
+    new SaradominBrew().drink(other);
+    expect(other.currentStats.range).toBe(99 - (Math.floor(99 * 0.1) + 2));
   });
 
   test("Prayer regeneration potion: one point every 12 ticks, 800 ticks per dose", () => {

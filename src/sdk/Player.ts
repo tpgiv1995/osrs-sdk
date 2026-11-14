@@ -850,6 +850,25 @@ export class Player extends Unit {
     return true;
   }
 
+  /** Divine potions: a stat held at its boosted level until the expiry tick (drains cannot lower it). */
+  heldStats: { [stat: string]: { level: number; expires: number } } = {};
+
+  holdStat(stat: "attack" | "strength" | "defence" | "range" | "magic", level: number, ticks: number) {
+    this.heldStats[stat] = { level, expires: this.v3TickCount + ticks };
+  }
+
+  v3ApplyHolds() {
+    Object.keys(this.heldStats).forEach((stat) => {
+      const held = this.heldStats[stat];
+      if (this.v3TickCount >= held.expires) {
+        this.currentStats[stat] = Math.min(this.currentStats[stat], this.stats[stat]);
+        delete this.heldStats[stat];
+      } else if (this.currentStats[stat] < held.level) {
+        this.currentStats[stat] = held.level;
+      }
+    });
+  }
+
   /** Cancel the heart if a drain pulled Magic below its level, end it when the 5 minutes are up. */
   v3CheckHeart() {
     if (!this.saturatedHeart) {
@@ -866,6 +885,7 @@ export class Player extends Unit {
   v3Tick() {
     this.v3TickCount++;
     this.v3CheckHeart();
+    this.v3ApplyHolds();
     if (this.prayerRegenTicksLeft > 0) {
       this.prayerRegenTicksLeft--;
       if (this.prayerRegenTicksLeft % 12 === 0) {

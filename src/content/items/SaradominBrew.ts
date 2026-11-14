@@ -75,6 +75,7 @@ export class SaradominBrew extends Potion {
 
     // The Magic drain cancels an active Saturated heart.
     player.v3CheckHeart();
+    player.v3ApplyHolds();
   }
 
   updateInventorySprite() {
