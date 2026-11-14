@@ -32,8 +32,12 @@ import HumanHit from "../assets/sounds/human_hit_513.ogg";
 import { TileMarker } from "../content/TileMarker";
 import { Model } from "./rendering/Model";
 
-import { PlayerAnimationIndices } from "./rendering/GLTFAnimationConstants";
 import { GLTFModel } from "./rendering/GLTFModel";
+import { CacheRender } from "./rendering/CacheRenderBundle";
+import { CacheRenderModel } from "./rendering/CacheRenderModel";
+import { CacheRenderReferences } from "./rendering/CacheRenderReference";
+import { FallbackModel } from "./rendering/FallbackModel";
+import { PlayerAnimationIndices } from "./rendering/GLTFAnimationConstants";
 import { Trainer } from "./Trainer";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1067,13 +1071,48 @@ export class Player extends Unit {
     context.restore();
   }
 
+  /**
+   * The cache-render loadout for what the player wears, in slot order, or null when some worn item has no cache id
+   * (then the legacy per-item GLB models are used instead).
+   */
+  cacheRenderLoadout(): number[] | null {
+    const worn = [
+      this.equipment.helmet,
+      this.equipment.necklace,
+      this.equipment.cape,
+      this.equipment.chest,
+      this.equipment.legs,
+      this.equipment.feet,
+      this.equipment.gloves,
+      this.equipment.ring,
+      this.equipment.ammo,
+      this.equipment.weapon,
+      this.equipment.offhand,
+    ].filter((e) => !!e);
+    if (worn.some((e) => e.cacheItemId === null || e.cacheItemId === undefined)) {
+      return null;
+    }
+    return worn.map((e) => e.cacheItemId);
+  }
+
   create3dModel(): Model {
-    return GLTFModel.forRenderableMulti(
-      this,
-      Object.values(this.equipment)
-        .map((e) => e?.model)
-        .filter((e) => !!e),
-    );
+    const legacy = () =>
+      GLTFModel.forRenderableMulti(
+        this,
+        Object.values(this.equipment)
+          .map((e) => e?.model)
+          .filter((e) => !!e),
+      );
+    const loadout = CacheRender.isConfigured() ? this.cacheRenderLoadout() : null;
+    if (!loadout) {
+      return legacy();
+    }
+    const reference = CacheRenderReferences.player(loadout, {
+      idle: PlayerAnimationIndices.Idle,
+      walk: PlayerAnimationIndices.Walk,
+      run: PlayerAnimationIndices.Run,
+    });
+    return new FallbackModel(CacheRenderModel.forRenderable(this, reference), legacy());
   }
 
   override get animationIndex() {

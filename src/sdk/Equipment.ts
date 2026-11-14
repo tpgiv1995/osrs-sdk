@@ -93,6 +93,13 @@ export class Equipment extends Item {
   }
 
   /**
+   * OSRS cache item id, when the item can be drawn from the cache model (see PLAYER_CACHE_ITEMS).
+   */
+  get cacheItemId(): number | null {
+    return null;
+  }
+
+  /**
    * name of the model to render for this item
    */
   get model(): string | null {

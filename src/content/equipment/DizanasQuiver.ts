@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Dizana's_quiver.png";
 import { Cape } from "../../sdk/gear/Cape";
@@ -8,6 +9,11 @@ import { RangedWeapon } from "../../sdk/weapons/RangedWeapon";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class DizanasQuiver extends Cape {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.dizanasQuiver.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

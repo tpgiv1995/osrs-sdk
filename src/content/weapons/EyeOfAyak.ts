@@ -1,3 +1,5 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
+import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 "use strict";
 
 import InventImage from "../../assets/images/equipment/Eye_of_ayak.png";
@@ -17,6 +19,15 @@ import { eyeMax, prayerFactor } from "../../sdk/V3Rules";
  * by the damage it deals. Numbers follow tools/inferno_gear.py (eye_max, magic_attack_roll).
  */
 export class EyeOfAyak extends MagicWeapon {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.eyeOfAyak.id;
+  }
+
+  override get attackAnimationId(): number {
+    return PlayerAnimationIndices.CastStaff;
+  }
+
   /** Set while the swing in flight is Soul Rend, so the next attack delay is 5 ticks. */
   private lastSwingWasSpec = false;
 

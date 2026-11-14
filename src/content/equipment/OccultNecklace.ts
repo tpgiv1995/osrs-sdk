@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { Necklace } from "../../sdk/gear/Necklace";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Occult_necklace.png";
@@ -5,6 +6,11 @@ import { ItemName } from "../../sdk/ItemName";
 import { V3Rules } from "../../sdk/V3Rules";
 
 export class OccultNecklace extends Necklace {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.occultNecklace.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

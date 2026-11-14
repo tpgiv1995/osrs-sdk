@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Crystal_legs.png";
 import { Legs } from "../../sdk/gear/Legs";
@@ -5,6 +6,11 @@ import { ItemName } from "../../sdk/ItemName";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class CrystalLegs extends Legs {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.crystalLegs.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

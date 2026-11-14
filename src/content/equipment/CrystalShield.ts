@@ -1,9 +1,15 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Crystal_shield.png";
 import { Offhand } from "../../sdk/gear/Offhand";
 import { ItemName } from "../../sdk/ItemName";
 
 export class CrystalShield extends Offhand {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.crystalShield.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

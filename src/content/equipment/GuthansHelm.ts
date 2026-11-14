@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Guthans_helm.png";
 import { Helmet } from "../../sdk/gear/Helmet";
@@ -5,6 +6,11 @@ import { ItemName } from "../../sdk/ItemName";
 
 /** V3 Inferno kit item. Stats are the OSRS Wiki values the calculator (tools/inferno_gear.py) reads. */
 export class GuthansHelm extends Helmet {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.guthansHelm.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

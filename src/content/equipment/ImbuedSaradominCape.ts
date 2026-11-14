@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Imbued_saradomin_cape.png";
 import { Cape } from "../../sdk/gear/Cape";
@@ -5,6 +6,11 @@ import { ItemName } from "../../sdk/ItemName";
 
 /** V3 Inferno kit item. Stats are the OSRS Wiki values the calculator (tools/inferno_gear.py) reads. */
 export class ImbuedSaradominCape extends Cape {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.imbuedSaradominCape.id;
+  }
+
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

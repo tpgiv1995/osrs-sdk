@@ -3,6 +3,10 @@
 
 export * from './Actor';
 export * from './BasicModel';
+export * from './CacheRenderBundle';
+export * from './CacheRenderModel';
+export * from './CacheRenderReference';
+export * from './FallbackModel';
 export * from './CanvasSpriteModel';
 export * from './EmptyModel';
 export * from './GLTFAnimationConstants';

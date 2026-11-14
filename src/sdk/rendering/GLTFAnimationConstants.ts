@@ -12,4 +12,7 @@ export enum PlayerAnimationIndices {
   ScytheIdle = 9,
   ScytheSwing = 10,
   SwordSlash = 11,
+  // cache-render poses only (no baked GLTF animation behind these two)
+  CastStaff = 12,
+  CastBarrage = 13,
 }

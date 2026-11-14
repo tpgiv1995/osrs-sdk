@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 "use strict";
 
 import InventImage from "../../assets/images/equipment/Bow_of_faerdhinen.png";
@@ -13,6 +14,11 @@ import { Sound } from "../../sdk/utils/SoundCache";
 import BofaAttackSound from "../../assets/sounds/crystal_bow_1352.ogg";
 
 export class BowOfFaerdhinen extends RangedWeapon {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.bowOfFaerdhinenC.id;
+  }
+
   constructor() {
     super();
     this.bonuses = {

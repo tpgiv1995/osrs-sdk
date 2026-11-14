@@ -59,6 +59,7 @@
     "@types/offscreencanvas": "^2019.6.4",
     "chebyshev": "^0.2.1",
     "color-scales": "^3.0.2",
+    "fflate": "^0.8.3",
     "madge": "^7.0.0",
     "source-map-loader": "^3.0.0"
   }

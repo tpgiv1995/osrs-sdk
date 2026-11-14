@@ -1,3 +1,5 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
+import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 "use strict";
 
 import InventoryImage from "../../assets/images/equipment/Blood_ancient_sceptre.png";
@@ -15,6 +17,15 @@ import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
  * Stats are the OSRS Wiki values used by tools/inferno_gear.py.
  */
 export class BloodAncientSceptre extends MeleeWeapon {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.bloodAncientSceptre.id;
+  }
+
+  override get attackAnimationId(): number {
+    return PlayerAnimationIndices.CastBarrage;
+  }
+
   autocastSpell: BarrageSpell = new IceBarrageSpell();
 
   constructor() {

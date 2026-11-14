@@ -155,6 +155,10 @@ export class GLTFModel implements Model, RenderableListener {
    * @param blend blend the new animation with the pose animation
    */
   startPlayingAnimation(id: number, blend = false) {
+    if (this.animations.some((animationsForModel) => !animationsForModel[id])) {
+      // A pose that exists only for cache-rendered players (e.g. spell casts): nothing to play in the legacy models.
+      return Promise.resolve();
+    }
     if (!blend) {
       this.stopCurrentAnimation();
       this.animations.forEach((animationsForModel) => {

@@ -1,3 +1,4 @@
+import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
 "use strict";
 
 import BPInventImage from "../../assets/images/weapons/blowpipe.png";
@@ -17,6 +18,11 @@ import { Assets } from "../../sdk/utils/Assets";
 import { V3Rules, onLanding } from "../../sdk/V3Rules";
 
 export class Blowpipe extends RangedWeapon {
+  /** OSRS cache item id: the player is drawn from the cache model of every worn item. */
+  override get cacheItemId(): number {
+    return PLAYER_CACHE_ITEMS.toxicBlowpipe.id;
+  }
+
   constructor() {
     super({
       modelScale: 1 / 128,
