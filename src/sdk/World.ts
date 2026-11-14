@@ -18,6 +18,8 @@ export class World {
   regions: Region[] = [];
   globalTickCounter = 0;
   isPaused = true;
+  /** Test helper: while set, game ticks stop and the tick fraction is held, but frames are still drawn. */
+  static debugFreeze: number | null = null;
   tickPercent: number;
   clientTickPercent: number;
   getReadyTimer = 0;
@@ -80,6 +82,16 @@ export class World {
       return;
     }
     const elapsed = now - this.then;
+    if (World.debugFreeze !== null) {
+      this.tickPercent = World.debugFreeze;
+      this.tickTimer = window.performance.now() - World.debugFreeze * Settings.tickMs;
+      if (elapsed > this.fpsInterval) {
+        this.then = now - (elapsed % this.fpsInterval);
+        Viewport.viewport.draw(this);
+        this.frameCount++;
+      }
+      return;
+    }
     const tickElapsed = now - this.tickTimer;
     if (tickElapsed >= 600) {
       this.tickTimer = now;

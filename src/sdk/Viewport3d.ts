@@ -286,6 +286,16 @@ export class Viewport3d implements ViewportDelegate {
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
   }
 
+  /** Test helper: where a renderable's model origin is on screen (px in the game canvas), or null. */
+  screenPointOf(renderable: Renderable): { x: number; y: number } | null {
+    const actor = this.knownActors.get(renderable);
+    if (!actor || !actor.getModel()) return null;
+    const model = actor.getModel() as unknown as { getMeshWorldPosition?: () => THREE.Vector3 | null };
+    const v = (model.getMeshWorldPosition?.() ?? actor.getModel().getWorldPosition()).clone();
+    v.project(this.camera);
+    return { x: (v.x * 0.5 + 0.5) * this.canvasDimensions.width, y: (-v.y * 0.5 + 0.5) * this.canvasDimensions.height };
+  }
+
   /** Test helper: which model the actor is drawn from ("cache", "legacy", "pending" or "other"). */
   modelSourceOf(renderable: Renderable): string | null {
     const actor = this.knownActors.get(renderable);
@@ -469,7 +479,9 @@ export class Viewport3d implements ViewportDelegate {
       }
     });
 
-    const delta = this.clock.getDelta();
+    const rawDelta = this.clock.getDelta();
+    // test helper: a frozen world also holds model animation clocks still
+    const delta = World.debugFreeze !== null ? 0 : rawDelta;
     this.updateCamera(delta);
 
     this.knownActors.forEach((actor, entity) => {

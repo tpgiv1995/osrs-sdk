@@ -382,6 +382,11 @@ export class GLTFModel implements Model, RenderableListener {
     }
   }
 
+  /** Test helper: where the loaded mesh itself is (a flying projectile's mesh is above its ground point). */
+  getMeshWorldPosition(): THREE.Vector3 | null {
+    return this.loadedModel ? this.loadedModel.getWorldPosition(new THREE.Vector3()) : null;
+  }
+
   getWorldPosition(): THREE.Vector3 {
     return this.outline.getWorldPosition(new THREE.Vector3());
   }

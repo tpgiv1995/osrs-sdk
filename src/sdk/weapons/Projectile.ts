@@ -184,6 +184,9 @@ export class Projectile extends Renderable {
     }
   }
 
+  /** Test helper: while set, no projectile model is drawn (the smoke test measures what a projectile adds to a frame). */
+  static debugHide = false;
+
   /** Debug-only record of every projectile created (the browser smoke test reads it). */
   static debugLogging = false;
   static debugLog: { from: string; style: string; source: string; ticks: number }[] = [];
@@ -301,6 +304,7 @@ export class Projectile extends Renderable {
   }
 
   visible(tickPercent) {
+    if (Projectile.debugHide) return false;
     const percent = this.getPercent(tickPercent);
     return percent > 0 && percent <= 1;
   }

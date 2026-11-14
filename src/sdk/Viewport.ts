@@ -84,6 +84,12 @@ export class Viewport {
 
   constructor(private delegate: ViewportDelegate) {}
 
+  /** Test helper (3D view only): screen point of a renderable's model origin. */
+  screenPointOf(renderable: Renderable): { x: number; y: number } | null {
+    const delegate = this.delegate as unknown as { screenPointOf?: (r: Renderable) => { x: number; y: number } | null };
+    return delegate.screenPointOf ? delegate.screenPointOf(renderable) : null;
+  }
+
   /** Test helper (3D view only): which model a renderable is drawn from. */
   modelSourceOf(renderable: Renderable): string | null {
     const delegate = this.delegate as unknown as { modelSourceOf?: (r: Renderable) => string | null };

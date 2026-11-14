@@ -19,6 +19,8 @@ import { AnimationFrameSoundPlayer, preloadAnimationFrameSounds } from "./Animat
 const ENABLE_CACHE_RENDER_ANIMATIONS = true;
 const DRAW_CLICKBOX_DEBUG = false;
 const SMOOTH_CACHE_ANIMATIONS = true;
+/** How long a standalone static graphic (no sequence) stays on screen before it completes. */
+const STATIC_GRAPHIC_SECONDS = 0.6;
 type RawFrame = CacheRenderRawFrame;
 type AnimationPayload = CacheRenderAnimation;
 type TexturePayload = CacheRenderTexture;
@@ -34,6 +36,18 @@ function spotAnimChannel(spotAnim: CacheRenderSpotAnim) {
 // concurrent swaps to share one fetch/decode operation. Failed loads are
 // evicted so a later attempt can retry.
 const decodedPayloadCache = new Map<string, Promise<Payload>>();
+
+/**
+ * Whether a spotanim mesh is on screen at `effectTime` seconds after it started. `lifetimeOwned` means something else
+ * destroys the model (a projectile): it then stays up for as long as the model lives, a static spotanim (no sequence,
+ * such as the BowFa arrow) included. Otherwise it is a one-shot graphic: its sequence's length, or
+ * STATIC_GRAPHIC_SECONDS for a static one.
+ */
+export function spotAnimShown(effectTime: number, total: number, isStatic: boolean, lifetimeOwned: boolean) {
+  if (effectTime < 0) return false;
+  if (lifetimeOwned) return true;
+  return effectTime < (isStatic ? STATIC_GRAPHIC_SECONDS : total);
+}
 
 export function cachedPayload(bundle: CacheRenderBundle, assetId: string): Promise<Payload> {
   const key = `${bundle.manifest.bundleVersion}:${assetId}`;
@@ -758,7 +772,13 @@ export class CacheRenderModel implements Model, RenderableListener {
         // graphic before the entity is destroyed.
         const total = animation?.lengths.reduce((sum, length) => sum + length, 0) / 50 || 0;
         const hasFrames = Boolean(animation?.frames.length || animation?.rawFrames?.length || animation?.mayaFrames?.length);
-        spot.mesh.visible = activationAnimation && Boolean(placement) && effectTime >= 0 && effectTime < total && hasFrames;
+        // A spotanim with no sequence (a static model such as the BowFa crystal arrow) has no duration of its own.
+        // When something else owns its lifetime (a projectile: the model is destroyed when it lands) it stays visible
+        // for as long as the model lives. A standalone graphic (which has an onSpotAnimComplete owner callback) is
+        // shown for STATIC_GRAPHIC_SECONDS and then completes.
+        const isStatic = !hasFrames || total <= 0;
+        const lifetimeOwned = this.reference.kind === "spotAnim" && !this.options.onSpotAnimComplete;
+        spot.mesh.visible = activationAnimation && Boolean(placement) && spotAnimShown(effectTime, total, isStatic, lifetimeOwned);
         const spotAnimationId = spot.animationId ?? -1;
         let spotSoundPlayer = this.spotFrameSoundPlayers.get(spotAnimationId);
         if (!spotSoundPlayer) {
@@ -769,7 +789,7 @@ export class CacheRenderModel implements Model, RenderableListener {
           this.reference.kind === "spotAnim" &&
           !this.spotAnimCompletionNotified &&
           effectTime >= 0 &&
-          (!animation || !hasFrames || total <= 0 || effectTime >= total)
+          (isStatic ? !lifetimeOwned && effectTime >= STATIC_GRAPHIC_SECONDS : effectTime >= total)
         ) {
           this.spotAnimCompletionNotified = true;
           this.options.onSpotAnimComplete?.();
@@ -779,7 +799,8 @@ export class CacheRenderModel implements Model, RenderableListener {
           continue;
         }
         spotSoundPlayer.advance(spotAnimationId, animation, effectTime, false, soundLocation);
-        const time = Math.max(0, Math.min(effectTime, Math.max(0, total - 1e-6)));
+        // A projectile's graphic loops its sequence for as long as the projectile flies; one-shot graphics hold the last frame.
+        const time = lifetimeOwned && total > 0 ? effectTime % total : Math.max(0, Math.min(effectTime, Math.max(0, total - 1e-6)));
         let elapsed = 0, frame = 0;
         for (; frame < animation.lengths.length - 1 && time >= elapsed + animation.lengths[frame] / 50; frame++) elapsed += animation.lengths[frame] / 50;
         const next = Math.min(frame + 1, animation.frames.length - 1);

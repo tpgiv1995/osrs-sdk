@@ -6,6 +6,7 @@ import { Random } from "../../src/sdk/Random";
 import { AttackStylesController } from "../../src/sdk/AttackStylesController";
 import { V3Rules } from "../../src/sdk/V3Rules";
 import { CacheRender } from "../../src/sdk/rendering/CacheRenderBundle";
+import { spotAnimShown } from "../../src/sdk/rendering/CacheRenderModel";
 import { GraphicsObject } from "../../src/sdk/GraphicsObject";
 import { PlayerAnimationIndices } from "../../src/sdk/rendering/GLTFAnimationConstants";
 import { PLAYER_CACHE_SPOTANIMS } from "../../src/assets/PlayerCacheItems";
@@ -184,5 +185,29 @@ describe("V3 projectile and impact graphics (cache spotanims, never the coloured
     eye.attack(player, target, {});
     expect(graphicIds(region)).toEqual([]);
     expect(target.incomingProjectiles[0].options.spotAnim).toBeUndefined();
+  });
+});
+
+describe("spotanim visibility (a static spotanim with no sequence must still be drawn)", () => {
+  it("keeps an unanimated projectile graphic (the BowFa arrow, spotanim 1926) on screen for the whole flight", () => {
+    for (const t of [0, 0.3, 0.6, 1.4, 5]) expect(spotAnimShown(t, 0, true, true)).toBe(true);
+  });
+  it("keeps an animated projectile graphic up past the end of its sequence", () => {
+    expect(spotAnimShown(0.2, 0.24, false, true)).toBe(true);
+    expect(spotAnimShown(0.9, 0.24, false, true)).toBe(true);
+  });
+  it("shows a standalone one-shot graphic for its sequence, then hides it", () => {
+    expect(spotAnimShown(0.1, 0.5, false, false)).toBe(true);
+    expect(spotAnimShown(0.5, 0.5, false, false)).toBe(false);
+  });
+  it("shows a standalone static graphic briefly, then hides it", () => {
+    expect(spotAnimShown(0.1, 0, true, false)).toBe(true);
+    expect(spotAnimShown(5, 0, true, false)).toBe(false);
+  });
+  it("never shows a graphic before it starts", () => {
+    expect(spotAnimShown(-0.1, 0, true, true)).toBe(false);
+  });
+  it("the BowFa projectile uses the static arrow spotanim 1926", () => {
+    expect(PLAYER_CACHE_SPOTANIMS.bofaArrowTravel).toBe(1926);
   });
 });
