@@ -1,7 +1,7 @@
 import { Item } from "../../sdk/Item";
 import { ItemName } from "../../sdk/ItemName";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
-import Image from "../../assets/images/potions/Rune_pouch.png";
+import Image from "../../assets/images/potions/Divine_rune_pouch.png";
 
 export interface PouchStack {
   rune: "Water" | "Death" | "Blood" | "Soul" | string;

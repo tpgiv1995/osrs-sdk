@@ -39,7 +39,7 @@ describe("V3 prayer book layout", () => {
     const slots = controls.slotPrayers();
     expect(slots).toHaveLength(30);
     expect(slots[0]?.name).toBe("Protect from Range");
-    expect(slots[1]?.name).toBe("Augury");
+    expect(slots[1]).toBeNull(); // Augury is hidden: the account has not unlocked it
     expect(slots[2]).toBeNull();
     expect(slots[5]?.name).toBe("Protect from Magic");
     expect(slots[10]?.name).toBe("Protect from Melee");
@@ -124,5 +124,59 @@ describe("V3 prayer book layout", () => {
     expect(player.prayerController.activePrayers().map((p) => p.name).sort()).toEqual(["Mystic Vigour", "Protect from Magic"]);
     controls.deactivateAllPrayers();
     player.prayerController.prayers.forEach((p) => p.tick());
+  });
+
+  test("Rigour, Augury and Preserve are hidden in both books and cannot be activated", () => {
+    const locked = ["Rigour", "Augury", "Preserve"];
+    [null, [...V3_PRAYER_LAYOUT], [...V3_INFERNO_PRAYER_LAYOUT]].forEach((layout) => {
+      Settings.prayerLayout = layout;
+      const names = controls.slotPrayers().map((p) => p?.name);
+      locked.forEach((n) => expect(names).not.toContain(n));
+    });
+    // a saved layout that names them gets them hidden too
+    Settings.prayerLayout = [...V3_INFERNO_PRAYER_LAYOUT];
+    Settings.prayerLayout[2] = "Rigour";
+    Settings.prayerLayout[3] = "Augury";
+    expect(controls.slotPrayers().map((p) => p?.name)).not.toContain("Rigour");
+    player.stats.prayer = 99;
+    locked.forEach((n) => {
+      const prayer = player.prayerController.findPrayerByName(n);
+      prayer.toggle(player);
+      prayer.activate(player);
+      prayer.tick();
+      expect(prayer.isActive).toBe(false);
+      expect(prayer.isLit).toBe(false);
+    });
+    Settings.prayerLayout = [...V3_PRAYER_LAYOUT];
+  });
+
+  test("quick prayers are configurable in a setup mode, default to Protect from Magic + Mystic Vigour, and persist", () => {
+    window.localStorage.removeItem("quickPrayers");
+    const fresh = new PrayerControls();
+    expect(fresh.quickPrayers()).toEqual(["Protect from Magic", "Mystic Vigour"]);
+    fresh.quickPrayerSetup = true;
+    const prayer = (n: string) => player.prayerController.findPrayerByName(n);
+    fresh.toggleQuickPrayer(prayer("Steel Skin"));
+    expect(fresh.quickPrayers()).toEqual(["Protect from Magic", "Mystic Vigour", "Steel Skin"]);
+    fresh.toggleQuickPrayer(prayer("Deadeye")); // conflicts with Mystic Vigour: replaces it
+    expect(fresh.quickPrayers()).toEqual(["Protect from Magic", "Steel Skin", "Deadeye"]);
+    fresh.toggleQuickPrayer(prayer("Rigour")); // locked: ignored
+    fresh.toggleQuickPrayer(prayer("Deadeye")); // toggles off
+    fresh.toggleQuickPrayer(prayer("Mystic Vigour"));
+    expect(fresh.quickPrayers()).toEqual(["Protect from Magic", "Steel Skin", "Mystic Vigour"]);
+    // in setup mode a slot click edits the set and does not turn prayers on
+    expect(player.prayerController.activePrayers()).toHaveLength(0);
+    fresh.endQuickPrayerSetup();
+    expect(JSON.parse(window.localStorage.getItem("quickPrayers"))).toEqual(["Protect from Magic", "Steel Skin", "Mystic Vigour"]);
+    // a new session reads the saved set, and the orb turns exactly that set on
+    const reloaded = new PrayerControls();
+    expect(reloaded.quickPrayers()).toEqual(["Protect from Magic", "Steel Skin", "Mystic Vigour"]);
+    player.stats.prayer = 93;
+    reloaded.activateQuickPrayers();
+    player.prayerController.prayers.forEach((p) => p.tick());
+    expect(player.prayerController.activePrayers().map((p) => p.name).sort()).toEqual(["Mystic Vigour", "Protect from Magic", "Steel Skin"]);
+    reloaded.deactivateAllPrayers();
+    player.prayerController.prayers.forEach((p) => p.tick());
+    window.localStorage.removeItem("quickPrayers");
   });
 });

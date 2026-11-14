@@ -10,6 +10,7 @@ import { IceBarrageSpell } from "../../src/sdk/weapons/IceBarrageSpell";
 import { BloodBarrageSpell } from "../../src/sdk/weapons/BloodBarrageSpell";
 import { EyeOfAyak } from "../../src/content/weapons/EyeOfAyak";
 import { BloodAncientSceptre } from "../../src/content/weapons/BloodAncientSceptre";
+import { Blowpipe } from "../../src/content/weapons/Blowpipe";
 import { BowOfFaerdhinen } from "../../src/content/weapons/BowOfFaerdhinen";
 import { ConflictionGauntlets } from "../../src/content/equipment/ConflictionGauntlets";
 import { MagusRing } from "../../src/content/equipment/MagusRing";
@@ -141,8 +142,8 @@ describe("G4 F3: prayers", () => {
     expect(pc.activePrayers().map((p) => p.name).sort()).toEqual(["Deadeye", "Thick Skin"]);
   });
 
-  test("the skins conflict with Piety, Rigour and Augury", () => {
-    ["Piety", "Rigour", "Augury"].forEach((name) => {
+  test("the skins conflict with Piety (Rigour and Augury are locked on this account)", () => {
+    ["Piety"].forEach((name) => {
       const { player } = makePlayer();
       const pc = player.prayerController;
       pc.findPrayerByName("Steel Skin").toggle(player);
@@ -269,6 +270,11 @@ describe("G4 F5: Blood Barrage damage and healing", () => {
     return { player, region, t, sceptre };
   }
 
+  /** Ticks the target's incoming projectiles until they have all landed. */
+  function land(t: TestNpc, ticks = 8) {
+    for (let i = 0; i < ticks; i++) t.processIncomingAttacks();
+  }
+
   test("base max hit is 29 (Ice Barrage 30) before magic damage bonuses", () => {
     const { player, t } = setup();
     const blood = new BloodBarrageSpell();
@@ -276,26 +282,42 @@ describe("G4 F5: Blood Barrage damage and healing", () => {
     blood._calculatePrayerEffects(player, t, b);
     expect(blood.baseDamage).toBe(29);
     expect(new IceBarrageSpell().baseDamage).toBe(30);
-    // the sceptre's +10% magic damage: floor(29 * 1.1) = 31
     expect(blood._maxHit(player, t, b)).toBe(Math.floor((29 * Math.round(player.bonuses.other.magicDamage * 1000)) / 1000));
   });
 
-  test("heals floor(27.5%) of the damage with the sceptre, 25% without it", () => {
+  test("lifesteal lands with the hit: no heal at cast, the heal on the tick the damage applies", () => {
     const { player, t } = setup();
     player.currentStats.hitpoint = 50;
+    t.currentStats.hitpoint = 125;
     Random.setRandom(sequence(0.01, 0.999)); // hit, high roll
     const blood = new BloodBarrageSpell();
     blood.attack(player, t, { magicBaseSpellDamage: 29, attackStyle: "magic" });
     const rolled = blood.damageRoll;
     expect(rolled).toBeGreaterThan(0);
+    expect(player.currentStats.hitpoint).toBe(50); // right after attack(): nothing yet
+    let landedTick = -1;
+    let healedTick = -1;
+    for (let tick = 1; tick <= 8; tick++) {
+      t.processIncomingAttacks();
+      if (landedTick < 0 && t.currentStats.hitpoint < 125) landedTick = tick;
+      if (healedTick < 0 && player.currentStats.hitpoint > 50) healedTick = tick;
+    }
+    expect(landedTick).toBeGreaterThan(1); // there is a hit delay
+    expect(healedTick).toBe(landedTick); // the same tick
     expect(player.currentStats.hitpoint).toBe(50 + Math.floor((rolled * 275) / 1000));
-    // without the sceptre
+  });
+
+  test("heals 25% without the sceptre", () => {
+    const { player, t } = setup();
     new EyeOfAyak().assignToPlayer(player);
     player.equipmentChanged();
     player.currentStats.hitpoint = 50;
     Random.setRandom(sequence(0.01, 0.999));
+    const blood = new BloodBarrageSpell();
     blood.attack(player, t, { magicBaseSpellDamage: 29, attackStyle: "magic" });
-    expect(player.currentStats.hitpoint).toBe(50 + Math.floor((blood.damageRoll * 250) / 1000));
+    const rolled = blood.damageRoll;
+    land(t);
+    expect(player.currentStats.hitpoint).toBe(50 + Math.floor((rolled * 250) / 1000));
   });
 
   test("a target with little HP left still pays the full would-be damage", () => {
@@ -305,8 +327,10 @@ describe("G4 F5: Blood Barrage damage and healing", () => {
     Random.setRandom(sequence(0.01, 0.999));
     const blood = new BloodBarrageSpell();
     blood.attack(player, t, { magicBaseSpellDamage: 29, attackStyle: "magic" });
-    expect(blood.damageRoll).toBeGreaterThan(2);
-    expect(player.currentStats.hitpoint).toBe(50 + Math.floor((blood.damageRoll * 275) / 1000));
+    const rolled = blood.damageRoll;
+    expect(rolled).toBeGreaterThan(2);
+    land(t);
+    expect(player.currentStats.hitpoint).toBe(50 + Math.floor((rolled * 275) / 1000));
   });
 
   test("the overheal cap stays 108, and a multi-target cast heals from every target hit", () => {
@@ -314,17 +338,44 @@ describe("G4 F5: Blood Barrage damage and healing", () => {
     const second = target(region, 34, 30);
     region.mobs.push(t as never, second as never);
     player.currentStats.hitpoint = 99;
-    Random.setRandom(() => 0.0001);
-    // damage rolls are floor(0.0001*30)=0: use a roll that damages
     Random.setRandom(sequence(0.01, 0.9, 0.01, 0.9, 0.01, 0.9, 0.01, 0.9));
     const blood = new BloodBarrageSpell();
     blood.cast(player, t);
+    expect(player.currentStats.hitpoint).toBe(99);
+    land(t);
+    land(second);
     expect(player.currentStats.hitpoint).toBeGreaterThan(99);
     for (let i = 0; i < 30; i++) {
       Random.setRandom(sequence(0.01, 0.99));
       blood.cast(player, t);
+      land(t);
+      land(second);
     }
     expect(player.currentStats.hitpoint).toBe(108);
+  });
+
+  test("blowpipe special: the heal also arrives with the hit, not at cast", () => {
+    const { player, t } = setup();
+    new Blowpipe().assignToPlayer(player);
+    player.equipmentChanged();
+    player.currentStats.hitpoint = 50;
+    t.currentStats.hitpoint = 125;
+    Random.setRandom(sequence(0.01, 0.999));
+    const bp = player.equipment.weapon as Blowpipe;
+    bp.specialAttack(player, t);
+    const rolled = bp.damageRoll;
+    expect(rolled).toBeGreaterThan(1);
+    expect(player.currentStats.hitpoint).toBe(50);
+    let landedTick = -1;
+    let healedTick = -1;
+    for (let tick = 1; tick <= 8; tick++) {
+      t.processIncomingAttacks();
+      if (landedTick < 0 && t.currentStats.hitpoint < 125) landedTick = tick;
+      if (healedTick < 0 && player.currentStats.hitpoint > 50) healedTick = tick;
+    }
+    expect(healedTick).toBe(landedTick);
+    expect(landedTick).toBeGreaterThan(0);
+    expect(player.currentStats.hitpoint).toBe(50 + Math.floor(rolled / 2));
   });
 });
 

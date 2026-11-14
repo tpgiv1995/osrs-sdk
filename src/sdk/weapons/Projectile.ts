@@ -29,6 +29,8 @@ export interface ProjectileOptions {
   hidden?: boolean;
   // if true, check prayer on landing rather than attack time
   checkPrayerAtHit?: boolean;
+  // called on the tick the projectile lands, right after its damage is applied (V3 lifesteal)
+  onImpact?: (projectile: Projectile) => void;
   // overrides reduceDelay
   setDelay?: number;
   reduceDelay?: number;

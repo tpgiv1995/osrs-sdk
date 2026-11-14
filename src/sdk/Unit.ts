@@ -643,6 +643,9 @@ export abstract class Unit extends Renderable {
           }
         }
         this.damageTaken();
+        if (projectile.options && projectile.options.onImpact) {
+          projectile.options.onImpact(projectile);
+        }
         this.lastHitAgo = 0;
         if (this.shouldChangeAggro(projectile)) {
           this.setAggro(projectile.from);

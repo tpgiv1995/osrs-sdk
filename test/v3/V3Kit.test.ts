@@ -256,11 +256,15 @@ describe("V3 Inferno kit: calculator parity", () => {
     player.currentStats.hitpoint = 99;
     Random.setRandom(sequence(0.01, 0.99));
     const blood = new BloodBarrageSpell();
+    const land = () => { for (let i = 0; i < 8; i++) target.processIncomingAttacks(); };
     blood.attack(player, target, { magicBaseSpellDamage: 29, attackStyle: "magic" });
+    expect(player.currentStats.hitpoint).toBe(99); // the heal comes with the hit, not at cast
+    land();
     expect(player.currentStats.hitpoint).toBeGreaterThan(99);
     expect(player.currentStats.hitpoint).toBeLessThanOrEqual(108);
     for (let i = 0; i < 20; i++) {
       blood.attack(player, target, { magicBaseSpellDamage: 29, attackStyle: "magic" });
+      land();
     }
     expect(player.currentStats.hitpoint).toBe(108);
     Random.setRandom(() => Math.random());

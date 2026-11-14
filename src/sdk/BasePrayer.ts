@@ -2,6 +2,7 @@
 
 import { Player } from "./Player";
 import { ImageLoader } from "./utils/ImageLoader";
+import { isPrayerLocked } from "./V3Rules";
 
 export enum PrayerGroups {
   OVERHEADS = "overheads",
@@ -59,7 +60,7 @@ export class BasePrayer {
    * Currently only used by Quick-Prayers. UI clicks always go through `toggle`.
    */
   activate(player: Player) {
-    if (player.stats.prayer < this.levelRequirement()) {
+    if (player.stats.prayer < this.levelRequirement() || isPrayerLocked(this.name)) {
       return;
     }
     if (!this.isActive || this.nextActiveState === false) this.willPlayOnSound = true;
@@ -68,7 +69,7 @@ export class BasePrayer {
   }
 
   toggle(player: Player) {
-    if (player.stats.prayer < this.levelRequirement()) {
+    if (player.stats.prayer < this.levelRequirement() || isPrayerLocked(this.name)) {
       return;
     }
     if (this.isLit) {

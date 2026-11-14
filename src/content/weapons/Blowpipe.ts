@@ -14,6 +14,7 @@ import { Sound, SoundCache } from "../../sdk/utils/SoundCache";
 
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 import { Assets } from "../../sdk/utils/Assets";
+import { V3Rules, onLanding } from "../../sdk/V3Rules";
 
 export class Blowpipe extends RangedWeapon {
   constructor() {
@@ -100,8 +101,15 @@ export class Blowpipe extends RangedWeapon {
     });
 
     const healAttackerBy = Math.floor(this.damageRoll / 2);
-    from.currentStats.hitpoint += healAttackerBy;
-    from.currentStats.hitpoint = Math.min(from.currentStats.hitpoint, from.stats.hitpoint);
+    const heal = () => {
+      from.currentStats.hitpoint += healAttackerBy;
+      from.currentStats.hitpoint = Math.min(from.currentStats.hitpoint, from.stats.hitpoint);
+    };
+    if (V3Rules.calculator) {
+      onLanding(from, to, heal); // the heal lands with the hit
+    } else {
+      heal();
+    }
   }
 
   _damageMultiplier(from: Unit, to: Unit, bonuses: AttackBonuses) {

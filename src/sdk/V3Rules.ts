@@ -84,6 +84,32 @@ export const PRAYER_BOOK_OVERRIDES: Record<string, string> = {
   "Mystic Might": "Mystic Vigour",
 };
 
+/**
+ * Runs `fn` on the tick the attack just made by `from` lands on `to` (lifesteal happens at impact, not at cast).
+ * Call right after the weapon's attack(): it hooks the projectile that attack added to the target.
+ */
+export function onLanding(from: Unit, to: Unit, fn: () => void) {
+  const incoming = to.incomingProjectiles;
+  for (let i = incoming.length - 1; i >= 0; i--) {
+    if (incoming[i].from === from) {
+      const previous = incoming[i].options.onImpact;
+      incoming[i].options.onImpact = (p) => {
+        if (previous) previous(p);
+        fn();
+      };
+      return;
+    }
+  }
+  fn(); // no projectile (should not happen): do not lose the heal
+}
+
+/** Prayers the account has not unlocked (Rigour, Augury and Preserve need the Chambers of Xeric scrolls): hidden and blocked. */
+export const LOCKED_PRAYERS: string[] = ["Rigour", "Augury", "Preserve"];
+
+export function isPrayerLocked(name: string): boolean {
+  return V3Rules.calculator && LOCKED_PRAYERS.includes(name);
+}
+
 /** Rune costs (OSRS Wiki infoboxes). */
 export const SPELL_RUNE_COSTS: Record<string, Record<string, number>> = {
   "Ice Barrage": { Water: 6, Death: 4, Blood: 2 },

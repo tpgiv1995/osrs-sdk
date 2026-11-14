@@ -321,6 +321,12 @@ export class MapController {
             this.toggleQuickprayers();
           },
         },
+        {
+          text: [{ text: "Setup", fillStyle: "white" }],
+          action: () => {
+            ControlPanelController.controls.PRAYER.beginQuickPrayerSetup();
+          },
+        },
       ];
     } else if (x > 15 && x < 67 && y > 122 && y < 149) {
       intercepted = true;

@@ -4,7 +4,7 @@ import PrayerTab from "../../assets/images/tabs/prayer.png";
 import { ImageLoader } from "../utils/ImageLoader";
 import type { BasePrayer } from "../BasePrayer";
 import { PRAYER_BOOK_ICONS } from "./PrayerBookIcons";
-import { PRAYER_BOOK_OVERRIDES, V3Rules } from "../V3Rules";
+import { PRAYER_BOOK_OVERRIDES, V3Rules, isPrayerLocked } from "../V3Rules";
 import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS, PRAYER_LAYOUT_ROWS } from "./PrayerLayouts";
 import { BaseControls } from "./BaseControls";
 import { Settings } from "../Settings";
@@ -37,12 +37,12 @@ export class PrayerControls extends BaseControls {
     const swap = (name: string) => (V3Rules.calculator && PRAYER_BOOK_OVERRIDES[name]) || name;
     if (!isValidPrayerLayout(layout)) {
       // The stock panel has 29 drawn slots; the two new prayers (appended) take over their lower versions' slots.
-      return prayers.slice(0, 29).map((prayer) => find(swap(prayer.name)));
+      return prayers.slice(0, 29).map((prayer) => (isPrayerLocked(prayer.name) ? null : find(swap(prayer.name))));
     }
     const seen = new Set<string>();
     return layout.map((name) => {
       const prayer = name ? find(swap(name)) : null;
-      if (!prayer || seen.has(prayer.name)) return null;
+      if (!prayer || isPrayerLocked(prayer.name) || seen.has(prayer.name)) return null;
       seen.add(prayer.name);
       return prayer;
     });
@@ -70,6 +70,12 @@ export class PrayerControls extends BaseControls {
   hoverAction(x: number, y: number) {
     const prayer = this.prayerAt(x, y);
     if (!prayer) return null;
+    if (this.quickPrayerSetup) {
+      return [
+        { text: this.quickPrayers().includes(prayer.name) ? "Remove from quick-prayers " : "Add to quick-prayers ", fillStyle: "white" },
+        { text: prayer.name, fillStyle: "#FF911F" },
+      ];
+    }
     return [
       { text: prayer.isLit ? "Deactivate " : "Activate ", fillStyle: "white" },
       { text: prayer.name, fillStyle: "#FF911F" },
@@ -95,19 +101,84 @@ export class PrayerControls extends BaseControls {
     });
   }
 
+  // --- Quick prayers: the set the orb turns on, edited in a setup mode like the game's (right-click the prayer orb).
+  private quickList: string[] | null = null;
+  quickPrayerSetup = false;
+
+  /** The saved quick-prayer set (localStorage "quickPrayers"); default Protect from Magic + Mystic Vigour. */
+  quickPrayers(): string[] {
+    if (this.quickList === null) {
+      let saved: unknown = null;
+      try {
+        saved = JSON.parse(window.localStorage.getItem("quickPrayers") || "null");
+      } catch {
+        saved = null;
+      }
+      const known = Trainer.player.prayerController.prayers.map((p) => p.name);
+      if (Array.isArray(saved) && saved.every((n) => typeof n === "string")) {
+        this.quickList = (saved as string[]).filter((n) => known.includes(n) && !isPrayerLocked(n));
+      } else {
+        this.quickList = V3Rules.calculator ? ["Protect from Magic", "Mystic Vigour"] : ["Protect from Magic", "Rigour"];
+      }
+    }
+    return this.quickList;
+  }
+
+  private saveQuickPrayers() {
+    window.localStorage.setItem("quickPrayers", JSON.stringify(this.quickPrayers()));
+  }
+
+  beginQuickPrayerSetup() {
+    this.quickPrayerSetup = true;
+    ControlPanelController.controller.setActiveControl("PRAYER");
+  }
+
+  endQuickPrayerSetup() {
+    this.quickPrayerSetup = false;
+    this.saveQuickPrayers();
+  }
+
+  /** Setup mode click: add or remove a prayer; adding drops any prayer in the set that conflicts with it. */
+  toggleQuickPrayer(prayer: BasePrayer) {
+    if (isPrayerLocked(prayer.name) || Trainer.player.stats.prayer < prayer.levelRequirement()) return;
+    const list = this.quickPrayers();
+    const at = list.indexOf(prayer.name);
+    if (at >= 0) {
+      list.splice(at, 1);
+    } else {
+      const prayers = Trainer.player.prayerController.prayers;
+      const conflicts = (other: string) => {
+        const o = prayers.find((p) => p.name === other);
+        return !!o && o.groups.some((g) => prayer.groups.includes(g));
+      };
+      this.quickList = list.filter((n) => !conflicts(n));
+      this.quickList.push(prayer.name);
+    }
+    this.saveQuickPrayers();
+  }
+
   activateQuickPrayers() {
     this.hasQuickPrayersActivated = true;
+    const wanted = this.quickPrayers();
     Trainer.player.prayerController.prayers.forEach((prayer) => {
-      if (prayer.name === "Protect from Magic") {
-        prayer.activate(Trainer.player);
-      }
-      if (V3Rules.calculator ? prayer.name === "Mystic Vigour" : prayer.name === "Rigour") {
+      if (wanted.includes(prayer.name)) {
         prayer.activate(Trainer.player);
       }
     });
   }
 
   panelClickDown(x: number, y: number) {
+    if (this.quickPrayerSetup) {
+      const scale = Settings.controlPanelScale;
+      // "Done" button at the bottom left of the panel
+      if (x / scale >= 12 && x / scale <= 82 && y / scale >= 241 && y / scale <= 263) {
+        this.endQuickPrayerSetup();
+        return;
+      }
+      const chosen = this.prayerAt(x, y);
+      if (chosen) this.toggleQuickPrayer(chosen);
+      return;
+    }
     const clickedPrayer = this.prayerAt(x, y);
     if (clickedPrayer && Trainer.player.currentStats.prayer > 0) {
       clickedPrayer.toggle(Trainer.player);
@@ -141,6 +212,27 @@ export class PrayerControls extends BaseControls {
     context.fillText(`${Math.round(Trainer.player.currentStats.prayer)} / ${Trainer.player.stats.prayer}`, x + 116 * scale, y + 257 * scale);
     context.restore();
 
+    if (!customLayout) {
+      // The stock panel image has the locked prayers baked in: paint their slots over.
+      Trainer.player.prayerController.prayers.slice(0, 29).forEach((prayer, index) => {
+        if (!isPrayerLocked(prayer.name)) return;
+        const origin = PrayerControls.slotOrigin(index);
+        context.fillStyle = "#3e3529";
+        context.fillRect(x + origin.x * scale, y + origin.y * scale, SLOT_H * scale, SLOT_H * scale);
+      });
+    }
+
+    if (this.quickPrayerSetup) {
+      context.save();
+      context.font = `${Math.round(13 * scale)}px Stats_12, OSRS, sans-serif`;
+      context.fillStyle = "#3e3529";
+      context.fillRect(x + 8 * scale, y + 241 * scale, 76 * scale, 22 * scale);
+      context.fillStyle = "#00ff00";
+      context.textAlign = "center";
+      context.fillText("Done", x + 46 * scale, y + 257 * scale);
+      context.restore();
+    }
+
     this.slotPrayers().forEach((prayer, index) => {
       if (!prayer) return;
       const x2 = index % PRAYER_LAYOUT_COLUMNS;
@@ -156,7 +248,20 @@ export class PrayerControls extends BaseControls {
         }
       }
 
-      if (prayer.isLit) {
+      if (this.quickPrayerSetup) {
+        if (this.quickPrayers().includes(prayer.name)) {
+          context.beginPath();
+          context.fillStyle = "#00ff0066";
+          context.arc(
+            x + 10 * scale + (x2 + 0.5) * 36.8 * scale,
+            y + (16 + (y2 + 0.5) * 37) * scale,
+            18 * scale,
+            0,
+            2 * Math.PI,
+          );
+          context.fill();
+        }
+      } else if (prayer.isLit) {
         context.beginPath();
         context.fillStyle = "#D1BB7773";
         context.arc(
