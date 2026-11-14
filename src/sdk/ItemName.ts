@@ -1,6 +1,7 @@
 export enum ItemName {
   EYE_OF_AYAK = "Eye of Ayak",
   DIVINE_RANGING_POTION = "Divine ranging potion",
+  RANGING_POTION = "Ranging potion",
   GUTHANS_HELM = "Guthan's helm",
   IMBUED_SARADOMIN_CAPE = "Imbued Saradomin cape",
   BANDOS_CHESTPLATE = "Bandos chestplate",

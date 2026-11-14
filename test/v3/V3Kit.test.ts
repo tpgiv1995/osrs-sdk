@@ -29,6 +29,7 @@ import { NecklaceOfRupture } from "../../src/content/equipment/NecklaceOfRupture
 import { SaturatedHeart } from "../../src/content/items/SaturatedHeart";
 import { SaradominBrew } from "../../src/content/items/SaradominBrew";
 import { BastionPotion } from "../../src/content/items/BastionPotion";
+import { RangingPotion } from "../../src/content/items/RangingPotion";
 import { DivineRangingPotion } from "../../src/content/items/DivineRangingPotion";
 import { PrayerRegenerationPotion } from "../../src/content/items/PrayerRegenerationPotion";
 
@@ -347,6 +348,47 @@ describe("V3 Inferno kit: calculator parity", () => {
     const { player } = makePlayer();
     new SaradominBrew().drink(player);
     expect(player.currentStats.range).toBe(99 - (Math.floor(99 * 0.1) + 2));
+  });
+
+  test("Ranging potion: Ranged 112, no HP cost, decays one level a minute", () => {
+    const { player } = makePlayer();
+    new RangingPotion().drink(player);
+    expect(player.currentStats.range).toBe(112);
+    expect(player.currentStats.hitpoint).toBe(99);
+    for (let i = 0; i < 100; i++) player.v3Tick();
+    expect(player.currentStats.range).toBe(111);
+    for (let i = 0; i < 200; i++) player.v3Tick();
+    expect(player.currentStats.range).toBe(109);
+    for (let i = 0; i < 100 * 20; i++) player.v3Tick();
+    expect(player.currentStats.range).toBe(99); // never below base
+  });
+
+  test("Ranging potion: a Saradomin brew drains it (112 to 99) and re-drinking re-boosts to 112", () => {
+    const { player } = makePlayer();
+    const potion = new RangingPotion();
+    potion.drink(player);
+    new SaradominBrew().drink(player);
+    expect(player.currentStats.range).toBe(99);
+    potion.drink(player);
+    expect(player.currentStats.range).toBe(112);
+    // drinking again while boosted does not stack past 112
+    potion.drink(player);
+    expect(player.currentStats.range).toBe(112);
+  });
+
+  test("boost decay spares the Saturated heart's Magic, and a boost held by a Divine potion", () => {
+    const { player } = makePlayer();
+    player.useSaturatedHeart();
+    new DivineRangingPotion().drink(player);
+    new SaradominBrew().drink(player); // Defence 120, Ranged 99, heart cancelled
+    for (let i = 0; i < 100; i++) player.v3Tick();
+    expect(player.currentStats.defence).toBe(119);
+    const other = makePlayer().player;
+    other.useSaturatedHeart();
+    new DivineRangingPotion().drink(other);
+    for (let i = 0; i < 300; i++) other.v3Tick();
+    expect(other.currentStats.magic).toBe(112);
+    expect(other.currentStats.range).toBe(112);
   });
 
   test("Prayer regeneration potion: one point every 12 ticks, 800 ticks per dose", () => {

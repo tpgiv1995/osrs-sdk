@@ -883,8 +883,22 @@ export class Player extends Unit {
     }
   }
 
+  /** Boosts decay one level a minute (100 ticks), except the Saturated heart's Magic and a Divine potion's stat. */
+  v3DecayBoosts() {
+    (["attack", "strength", "defence", "range", "magic"] as const).forEach((stat) => {
+      if (stat === "magic" && this.saturatedHeart) return;
+      if (this.heldStats[stat]) return;
+      if (this.currentStats[stat] > this.stats[stat]) {
+        this.currentStats[stat]--;
+      }
+    });
+  }
+
   v3Tick() {
     this.v3TickCount++;
+    if (V3Rules.calculator && this.v3TickCount % 100 === 0) {
+      this.v3DecayBoosts();
+    }
     this.v3CheckHeart();
     this.v3ApplyHolds();
     if (this.prayerRegenTicksLeft > 0) {

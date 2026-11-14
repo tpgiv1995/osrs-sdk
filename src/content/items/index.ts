@@ -10,4 +10,5 @@ export { SuperRestore } from './SuperRestore';
 export { SaturatedHeart } from './SaturatedHeart';
 export { RunePouch } from './RunePouch';
 export { DivineRangingPotion } from './DivineRangingPotion';
+export { RangingPotion } from './RangingPotion';
 export { PrayerRegenerationPotion } from './PrayerRegenerationPotion';
