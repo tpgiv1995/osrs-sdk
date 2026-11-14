@@ -118,6 +118,16 @@ export class PrayerControls extends BaseControls {
       super.draw(context, ctrl, x, y);
     }
 
+    // The panel images carry a baked "99 / 99"; repaint it with the real prayer points.
+    context.fillStyle = "#3e3529";
+    context.fillRect(x + 92 * scale, y + 243 * scale, 52 * scale, 17 * scale);
+    context.save();
+    context.font = `${Math.round(13 * scale)}px Stats_12, OSRS, sans-serif`;
+    context.fillStyle = "#ff981f";
+    context.textAlign = "center";
+    context.fillText(`${Math.round(Trainer.player.currentStats.prayer)} / ${Trainer.player.stats.prayer}`, x + 116 * scale, y + 257 * scale);
+    context.restore();
+
     this.slotPrayers().forEach((prayer, index) => {
       if (!prayer) return;
       const x2 = index % PRAYER_LAYOUT_COLUMNS;
