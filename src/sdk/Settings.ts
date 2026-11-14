@@ -2,6 +2,7 @@
 
 import { PlayerStats, SerializePlayerStats, DeserializePlayerStats } from "./PlayerStats";
 import { Location } from "./Location";
+import { isValidPrayerLayout, V3_PRAYER_LAYOUT, PrayerLayout } from "./controlpanels/PrayerLayouts";
 
 const WASD = ["w", "a", "s", "d"];
 
@@ -25,6 +26,12 @@ export class Settings {
   static displayFeedback: boolean;
   static metronome: boolean;
   static antiDrag: number;
+  /** RuneLite resizable-modern layout: one bottom tab row, bigger panel, chat strip. */
+  static modernLayout = true;
+  /** Multiplier on mouse camera rotation speed. 1 = upstream default. */
+  static cameraSensitivity = 0.65;
+  /** Custom prayer book slots (30 names, "" = empty) or null for the stock order. */
+  static prayerLayout: PrayerLayout | null = null;
 
   static inventory_key: string;
   static spellbook_key: string;
@@ -108,8 +115,25 @@ export class Settings {
     window.localStorage.setItem("use3dView", String(Settings.use3dView));
     window.localStorage.setItem("maxUiScale", String(Settings.maxUiScale));
     window.localStorage.setItem("antiDrag", String(Settings.antiDrag));
+    window.localStorage.setItem("modernLayout", String(Settings.modernLayout));
+    window.localStorage.setItem("cameraSensitivity", String(Settings.cameraSensitivity));
+    window.localStorage.setItem(
+      "prayerLayout",
+      JSON.stringify(isValidPrayerLayout(Settings.prayerLayout) ? Settings.prayerLayout : null),
+    );
 
     Settings.checkWasd();
+  }
+
+  private static readPrayerLayout(): PrayerLayout | null {
+    const raw = window.localStorage.getItem("prayerLayout");
+    if (raw === null) return [...V3_PRAYER_LAYOUT];
+    try {
+      const parsed = JSON.parse(raw);
+      return isValidPrayerLayout(parsed) ? parsed : null;
+    } catch {
+      return [...V3_PRAYER_LAYOUT];
+    }
   }
 
   static read<T>(key: string, defaultValue: T): T {
@@ -151,11 +175,17 @@ export class Settings {
 
     Settings.displayXpDrops = !(window.localStorage.getItem("displayXpDrops") === "false" || false);
 
-    Settings.inventory_key = window.localStorage.getItem("inventory_key") || "F4";
-    Settings.spellbook_key = window.localStorage.getItem("spellbook_key") || "F2";
-    Settings.equipment_key = window.localStorage.getItem("equipment_key") || "F1";
+    // V3 defaults: F1 combat, F2 inventory, F3 prayer, F4 magic, F5 equipment.
+    Settings.inventory_key = window.localStorage.getItem("inventory_key") || "F2";
+    Settings.spellbook_key = window.localStorage.getItem("spellbook_key") || "F4";
+    Settings.equipment_key = window.localStorage.getItem("equipment_key") || "F5";
     Settings.prayer_key = window.localStorage.getItem("prayer_key") || "F3";
-    Settings.combat_key = window.localStorage.getItem("combat_key") || "F5";
+    Settings.combat_key = window.localStorage.getItem("combat_key") || "F1";
+
+    Settings.modernLayout = window.localStorage.getItem("modernLayout") !== "false";
+    const sensitivity = parseFloat(window.localStorage.getItem("cameraSensitivity"));
+    Settings.cameraSensitivity = sensitivity > 0 ? sensitivity : 0.65;
+    Settings.prayerLayout = Settings.readPrayerLayout();
     Settings.player_stats = DeserializePlayerStats(window.localStorage.getItem("stats"));
     Settings.tile_markers = JSON.parse(window.localStorage.getItem("tile_markers"));
 
@@ -166,7 +196,8 @@ export class Settings {
     } else if (window.localStorage.getItem("menuVisible") === "false") {
       Settings.menuVisible = false;
     } else {
-      Settings.menuVisible = Settings.mobileCheck() === false;
+      // V3: the site sidebar stays behind a gear button until opened.
+      Settings.menuVisible = false;
     }
     if (!Settings.menuVisible) {
       document.getElementById("right_panel").classList.add("hidden");

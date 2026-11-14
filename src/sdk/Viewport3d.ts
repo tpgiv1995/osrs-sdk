@@ -153,9 +153,15 @@ export class Viewport3d implements ViewportDelegate {
 
   // implementation from https://codepen.io/seanwasere/pen/BaMBoPd
   onDocumentMouseMove(e: MouseEvent) {
-    if ((e.buttons & 4) !== 4) return;
-    this.yaw.rotation.y -= e.movementX * ROTATE_MULT;
-    const v = this.pitch.rotation.x - e.movementY * ROTATE_MULT;
+    const middle = (e.buttons & 4) === 4;
+    const right =
+      (e.buttons & 2) === 2 &&
+      !Viewport.viewport.contextMenu.isActive &&
+      (Viewport.viewport.clickController?.trackRightDrag(e) ?? false);
+    if (!middle && !right) return;
+    const rotate = ROTATE_MULT * (Settings.cameraSensitivity || 1);
+    this.yaw.rotation.y -= e.movementX * rotate;
+    const v = this.pitch.rotation.x - e.movementY * rotate;
     if (v > MIN_PITCH && v < MAX_PITCH) {
       this.pitch.rotation.x = v;
     }
@@ -301,8 +307,6 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   async initialise(world: World, region: Region) {
-    document.body.appendChild(this.stats.dom);
-
     /*const light = new THREE.PointLight(0xffffaa, 1200);
     light.position.set(region.width / 2, 30, region.height / 2);
     this.scene.add(light);*/

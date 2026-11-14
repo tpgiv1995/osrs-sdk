@@ -11,7 +11,10 @@ export class Assets {
   static getAssetUrl(asset: string) {
     // TODO switch CDN based on build variable 
     //const url = `https://assets-soltrainer.netlify.app/${asset}`;
-    const url = `https://oldschool-cdn.com/${asset}`;
+    // The default CDN only allows the upstream site origins. A host page that serves its own
+    // copy sets window.OSRS_ASSET_BASE_URL (a path or URL ending in "/") before this bundle loads.
+    const base: string = (typeof window !== "undefined" && (window as any).OSRS_ASSET_BASE_URL) || "https://oldschool-cdn.com/";
+    const url = `${base}${asset}`;
     if (Assets.loadedAssets[url]) {
       return url;
     }

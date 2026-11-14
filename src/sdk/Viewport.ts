@@ -6,6 +6,7 @@ import { Player } from "./Player";
 import { ContextMenu } from "./ContextMenu";
 import { World } from "./World";
 import { ControlPanelController } from "./ControlPanelController";
+import { ChatStrip } from "./ChatStrip";
 import { MapController } from "./MapController";
 import { XpDropController } from "./XpDropController";
 import { ImageLoader } from "./utils/ImageLoader";
@@ -72,7 +73,7 @@ export class Viewport {
   activeButtonImage: HTMLImageElement = ImageLoader.createImage(ButtonActiveIcon);
   contextMenu: ContextMenu = new ContextMenu();
 
-  private clickController: ClickController;
+  clickController: ClickController;
   canvas: HTMLCanvasElement;
   width: number;
   height: number;
@@ -198,6 +199,12 @@ export class Viewport {
 
     // draw control panel
     ControlPanelController.controller.draw(this.context);
+    {
+      const { width: chromeWidth, height: chromeHeight } = Chrome.size();
+      const controller = ControlPanelController.controller;
+      const tabsLeft = controller.controls?.length ? controller.tabPosition(0).x : chromeWidth;
+      ChatStrip.draw(this.context, chromeWidth, chromeHeight, controller.getTabScale(), tabsLeft);
+    }
     XpDropController.controller.draw(
       this.context,
       width - 140 - MapController.controller.width - (Settings.menuVisible ? 232 : 0),

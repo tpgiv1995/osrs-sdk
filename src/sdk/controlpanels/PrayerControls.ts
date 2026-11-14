@@ -1,12 +1,67 @@
 import PrayerPanel from "../../assets/images/panels/prayer.png";
+import PrayerPanelBlank from "../../assets/images/panels/prayer_blank.png";
 import PrayerTab from "../../assets/images/tabs/prayer.png";
+import { ImageLoader } from "../utils/ImageLoader";
+import type { BasePrayer } from "../BasePrayer";
+import { PRAYER_BOOK_ICONS } from "./PrayerBookIcons";
+import { isValidPrayerLayout, PRAYER_LAYOUT_COLUMNS, PRAYER_LAYOUT_ROWS } from "./PrayerLayouts";
 import { BaseControls } from "./BaseControls";
 import { Settings } from "../Settings";
 import { ControlPanelController } from "../ControlPanelController";
 import { Trainer } from "../Trainer";
 
+// Geometry of the stock panel image's icon grid, in unscaled panel pixels.
+const SLOT_LEFT = 10;
+const SLOT_TOP = 16;
+const SLOT_W = 36.8;
+const SLOT_H = 37;
+
 export class PrayerControls extends BaseControls {
   hasQuickPrayersActivated = false;
+  blankPanelImage: HTMLImageElement = ImageLoader.createImage(PrayerPanelBlank);
+  private bookIcons: Record<string, HTMLImageElement> = Object.keys(PRAYER_BOOK_ICONS).reduce(
+    (icons, name) => {
+      icons[name] = ImageLoader.createImage(PRAYER_BOOK_ICONS[name]);
+      return icons;
+    },
+    {} as Record<string, HTMLImageElement>,
+  );
+
+  /** The prayer in each of the 30 book slots, following Settings.prayerLayout when set. */
+  slotPrayers(): (BasePrayer | null)[] {
+    const prayers = Trainer.player.prayerController.prayers;
+    const layout = Settings.prayerLayout;
+    if (!isValidPrayerLayout(layout)) return prayers;
+    return layout.map((name) => (name ? prayers.find((prayer) => prayer.name === name) ?? null : null));
+  }
+
+  /** Panel-relative slot origin in unscaled panel pixels; the drawn icon is 37x37 from here. */
+  static slotOrigin(index: number) {
+    return {
+      x: Math.round(SLOT_LEFT + (index % PRAYER_LAYOUT_COLUMNS) * SLOT_W),
+      y: SLOT_TOP + Math.floor(index / PRAYER_LAYOUT_COLUMNS) * SLOT_H,
+    };
+  }
+
+  private prayerAt(x: number, y: number): BasePrayer | null {
+    const scale = Settings.controlPanelScale;
+    const gridX = x / scale - SLOT_LEFT;
+    const gridY = y / scale - SLOT_TOP;
+    if (gridX < 0 || gridY < 0) return null;
+    const column = Math.floor(gridX / SLOT_W);
+    const row = Math.floor(gridY / SLOT_H);
+    if (column >= PRAYER_LAYOUT_COLUMNS || row >= PRAYER_LAYOUT_ROWS) return null;
+    return this.slotPrayers()[row * PRAYER_LAYOUT_COLUMNS + column] ?? null;
+  }
+
+  hoverAction(x: number, y: number) {
+    const prayer = this.prayerAt(x, y);
+    if (!prayer) return null;
+    return [
+      { text: prayer.isLit ? "Deactivate " : "Activate ", fillStyle: "white" },
+      { text: prayer.name, fillStyle: "#FF911F" },
+    ];
+  }
 
   get panelImageReference() {
     return PrayerPanel;
@@ -40,16 +95,7 @@ export class PrayerControls extends BaseControls {
   }
 
   panelClickDown(x: number, y: number) {
-    const scale = Settings.controlPanelScale;
-
-    x = x / scale;
-    y = y / scale;
-
-    const gridX = x - 14;
-    const gridY = y - 22;
-
-    const clickedPrayer =
-      Trainer.player.prayerController.prayers[Math.floor(gridY / 35) * 5 + Math.floor(gridX / 35)];
+    const clickedPrayer = this.prayerAt(x, y);
     if (clickedPrayer && Trainer.player.currentStats.prayer > 0) {
       clickedPrayer.toggle(Trainer.player);
 
@@ -64,12 +110,26 @@ export class PrayerControls extends BaseControls {
   }
 
   draw(context, ctrl: ControlPanelController, x: number, y: number) {
-    super.draw(context, ctrl, x, y);
     const scale = Settings.controlPanelScale;
+    const customLayout = isValidPrayerLayout(Settings.prayerLayout);
+    if (customLayout) {
+      context.drawImage(this.blankPanelImage, x, y, 204 * scale, 275 * scale);
+    } else {
+      super.draw(context, ctrl, x, y);
+    }
 
-    Trainer.player.prayerController.prayers.forEach((prayer, index) => {
-      const x2 = index % 5;
-      const y2 = Math.floor(index / 5);
+    this.slotPrayers().forEach((prayer, index) => {
+      if (!prayer) return;
+      const x2 = index % PRAYER_LAYOUT_COLUMNS;
+      const y2 = Math.floor(index / PRAYER_LAYOUT_COLUMNS);
+
+      if (customLayout) {
+        const icon = this.bookIcons[prayer.name];
+        if (icon) {
+          const origin = PrayerControls.slotOrigin(index);
+          context.drawImage(icon, x + origin.x * scale, y + origin.y * scale, SLOT_H * scale, SLOT_H * scale);
+        }
+      }
 
       if (prayer.isLit) {
         context.beginPath();
