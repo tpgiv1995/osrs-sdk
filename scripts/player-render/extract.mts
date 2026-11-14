@@ -58,7 +58,7 @@ function payload(group, includeFace = (model, face) => true, definition) {
       animayaScales.push(model.animayaScales?.[source] ?? []);
       colors.push(hslRgb(faceColor));
       faceColors.push(faceColor);
-      alphas.push(model.faceAlphas?.[face] ?? 0);
+      alphas.push((model.faceAlphas?.[face] ?? 0) & 255); // the reader returns signed bytes; the runtime expects 0..255 (255 = transparent)
       uvs.push(model.faceTextureUCoordinates?.[face]?.[corner] ?? 0, model.faceTextureVCoordinates?.[face]?.[corner] ?? 0);
       textureIds.push(faceTexture);
       for (let groupIndex = 0; groupIndex < vertexGroups.length; groupIndex++) if (model.vertexGroups[groupIndex]?.includes(source)) vertexGroups[groupIndex].push(index);
