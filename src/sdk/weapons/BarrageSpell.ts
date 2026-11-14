@@ -7,6 +7,8 @@ import { AttackBonuses } from "../gear/Weapon";
 import { XpDrop } from "../XpDrop";
 import { AttackStyle } from "../AttackStylesController";
 import { V3Rules, spendSpellRunes } from "../V3Rules";
+import { PLAYER_CACHE_SPOTANIMS } from "../../assets/PlayerCacheItems";
+import { spawnGraphic, v3GraphicsEnabled, withImpact } from "../V3Graphics";
 
 export class BarrageSpell extends MagicWeapon {
   get aoe() {
@@ -36,6 +38,26 @@ export class BarrageSpell extends MagicWeapon {
 
   attackStyle() {
     return AttackStyle.AUTOCAST;
+  }
+
+  /** Cache graphic played on every target the spell lands on (Ice Barrage 369, Blood Barrage 377). */
+  get impactSpotAnim(): number {
+    return PLAYER_CACHE_SPOTANIMS.iceBarrageImpact;
+  }
+
+  /**
+   * V3: the barrages have no projectile in the game, only an impact graphic on each target when the spell lands
+   * (the splash graphic when it does no damage), on the same tick the damage applies.
+   */
+  override registerProjectile(from: Unit, to: Unit, bonuses: AttackBonuses, options: ProjectileOptions = {}) {
+    super.registerProjectile(
+      from,
+      to,
+      bonuses,
+      withImpact({ ...(v3GraphicsEnabled() ? { hidden: true } : {}), ...options }, (projectile) =>
+        spawnGraphic(to, projectile.damage > 0 ? this.impactSpotAnim : PLAYER_CACHE_SPOTANIMS.splash, 0),
+      ),
+    );
   }
 
   /** Base max hit before magic damage bonuses (wiki): Ice Barrage 30, Blood Barrage 29. */

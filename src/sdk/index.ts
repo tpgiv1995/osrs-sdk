@@ -7,6 +7,8 @@ export * from './V3Rules';
 export * from './Collision';
 
 export * from './Entity';
+export * from './GraphicsObject';
+export * from './V3Graphics';
 export * from './Unit';
 export * from './UnitStats';
 export * from './Mob';

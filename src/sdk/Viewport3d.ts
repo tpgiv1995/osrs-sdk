@@ -286,6 +286,35 @@ export class Viewport3d implements ViewportDelegate {
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
   }
 
+  /** Test helper: which model the actor is drawn from ("cache", "legacy", "pending" or "other"). */
+  modelSourceOf(renderable: Renderable): string | null {
+    const actor = this.knownActors.get(renderable);
+    const model = actor && actor.getModel();
+    if (!model) return null;
+    const source = (model as unknown as { activeSource?: string }).activeSource;
+    return source ?? "other";
+  }
+
+  /** Test helper: where a renderable's model sits on screen now (px in the game canvas), or null if not drawn yet. */
+  screenBoxOf(renderable: Renderable): { x: number; y: number; w: number; h: number } | null {
+    const actor = this.knownActors.get(renderable);
+    if (!actor || !actor.getModel()) return null;
+    const base = actor.getModel().getWorldPosition();
+    const project = (height: number) => {
+      const v = base.clone();
+      v.y += height;
+      v.project(this.camera);
+      return {
+        x: (v.x * 0.5 + 0.5) * this.canvasDimensions.width,
+        y: (-v.y * 0.5 + 0.5) * this.canvasDimensions.height,
+      };
+    };
+    const feet = project(0);
+    const head = project(1.7);
+    const h = Math.abs(feet.y - head.y);
+    return { x: (feet.x + head.x) / 2 - h * 0.4, y: Math.min(feet.y, head.y), w: h * 0.8, h };
+  }
+
   calculateCanvasDimensions() {
     const { width, height } = Chrome.size();
 

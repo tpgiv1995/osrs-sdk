@@ -12,6 +12,7 @@ import { XpDropController } from "./XpDropController";
 import { ImageLoader } from "./utils/ImageLoader";
 import ButtonActiveIcon from "../assets/images/interface/button_active.png";
 import { CardinalDirection, Region } from "./Region";
+import { Renderable } from "./Renderable";
 import { Viewport3d } from "./Viewport3d";
 import { Location } from "./Location";
 import { Mob } from "./Mob";
@@ -82,6 +83,18 @@ export class Viewport {
   public components: Component[] = [];
 
   constructor(private delegate: ViewportDelegate) {}
+
+  /** Test helper (3D view only): which model a renderable is drawn from. */
+  modelSourceOf(renderable: Renderable): string | null {
+    const delegate = this.delegate as unknown as { modelSourceOf?: (r: Renderable) => string | null };
+    return delegate.modelSourceOf ? delegate.modelSourceOf(renderable) : null;
+  }
+
+  /** Test helper (3D view only): screen box of a renderable's model. */
+  screenBoxOf(renderable: Renderable): { x: number; y: number; w: number; h: number } | null {
+    const delegate = this.delegate as unknown as { screenBoxOf?: (r: Renderable) => { x: number; y: number; w: number; h: number } | null };
+    return delegate.screenBoxOf ? delegate.screenBoxOf(renderable) : null;
+  }
 
   /**
    * Return all objects or world coordinates at the given position (relative to the top-left of the viewport).

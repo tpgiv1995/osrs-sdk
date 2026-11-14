@@ -4,6 +4,7 @@ import { ProjectileOptions } from "./Projectile";
 import { AttackBonuses } from "../gear/Weapon";
 import { ItemName } from "../ItemName";
 import { V3Rules, onLanding } from "../V3Rules";
+import { PLAYER_CACHE_SPOTANIMS } from "../../assets/PlayerCacheItems";
 import { Sound, SoundCache } from "../utils/SoundCache";
 import BloodBarrageSound from "../../assets/sounds/blood_barrage.ogg"
 
@@ -19,6 +20,10 @@ export class BloodBarrageSpell extends BarrageSpell {
 
   get itemName(): ItemName {
     return ItemName.BLOOD_BARRAGE;
+  }
+
+  override get impactSpotAnim(): number {
+    return PLAYER_CACHE_SPOTANIMS.bloodBarrageImpact;
   }
 
   get baseDamage(): number {

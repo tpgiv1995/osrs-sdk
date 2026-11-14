@@ -17,7 +17,7 @@ import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { gzipSync } from "fflate";
 import { RSCache, IndexType, ConfigType, ModelGroup } from "../../../osrscachereader/src/reader.js";
-import { PLAYER_CACHE_ITEMS, PLAYER_DEFAULT_KIT, PLAYER_ANIMATION_SEQUENCES } from "../../src/assets/PlayerCacheItems";
+import { PLAYER_CACHE_ITEMS, PLAYER_DEFAULT_KIT, PLAYER_ANIMATION_SEQUENCES, PLAYER_CACHE_SPOTANIMS } from "../../src/assets/PlayerCacheItems";
 import { CACHE_RENDER_BUNDLE_SCHEMA_VERSION, CACHE_RENDER_PAYLOAD_MAGIC, CACHE_RENDER_PAYLOAD_VERSION } from "../../src/cache-render-format/index.ts";
 import { applyDefinitionOverrides } from "./definition-overrides";
 import { renderFaceIndices } from "./face-rendering";
@@ -213,6 +213,24 @@ for (const [name, { id }] of Object.entries(PLAYER_CACHE_ITEMS)) {
   };
 }
 
+async function spotAnimAsset(cache, id, models) {
+  const definition = await cache.getDef(IndexType.CONFIGS.id, ConfigType.SPOTANIM.id, id);
+  if (!definition || definition.modelId == null) throw new Error(`Missing spotanim definition ${id}`);
+  await modelAsset(cache, definition.modelId, models);
+  // Keep the raw model: ModelGroup's geometry merge omits the face-label alpha groups that type-5 fades need.
+  const group = { getMergedModel: () => models.get(definition.modelId) };
+  const result = await attachTextures(cache, payload(group, undefined, definition));
+  result.animations = definition.animationId >= 0 ? await animations(cache, group, [definition.animationId]) : {};
+  result.spotAnim = { id, animationId: definition.animationId, resizeX: definition.resizeX ?? 128, resizeY: definition.resizeY ?? 128, rotation: definition.rotation ?? 0 };
+  return result;
+}
+const spotAnimAssets = {};
+for (const id of Object.values(PLAYER_CACHE_SPOTANIMS)) {
+  const assetId = `spotanim-${id}`;
+  assets.push({ id: assetId, payload: await spotAnimAsset(cache, id, models) });
+  spotAnimAssets[String(id)] = assetId;
+}
+
 const kitAssets = {};
 for (const [part, { kit: kitId, slot }] of Object.entries(PLAYER_DEFAULT_KIT)) {
   const kit = await cache.getDef(IndexType.CONFIGS.id, ConfigType.IDENTKIT.id, kitId);
@@ -250,6 +268,7 @@ const manifest = {
   playerItems,
   playerItemInfo,
   playerKit: kitAssets,
+  spotAnims: spotAnimAssets,
   sharedAssets: { playerAnimations: "player-animations" },
 };
 await writeFile(resolve(outputDirectory, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);

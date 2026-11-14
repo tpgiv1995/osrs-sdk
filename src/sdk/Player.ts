@@ -186,6 +186,13 @@ export class Player extends Unit {
     this.inventory[pos2] = temp;
   }
 
+  /** Test helper: draws nothing for the player model while set (used to measure what the player adds to a frame). */
+  debugHideModel = false;
+
+  override visible(tickPercent: number): boolean {
+    return !this.debugHideModel;
+  }
+
   equipmentChanged() {
     if (!V3Rules.calculator) {
       this.interruptCombat();

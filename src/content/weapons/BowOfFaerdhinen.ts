@@ -1,4 +1,6 @@
-import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
+import { PLAYER_CACHE_ITEMS, PLAYER_CACHE_SPOTANIMS } from "../../assets/PlayerCacheItems";
+import { ProjectileOptions } from "../../sdk/weapons/Projectile";
+import { spawnGraphic, spotAnimProjectile } from "../../sdk/V3Graphics";
 "use strict";
 
 import InventImage from "../../assets/images/equipment/Bow_of_faerdhinen.png";
@@ -107,5 +109,11 @@ export class BowOfFaerdhinen extends RangedWeapon {
 
   get attackAnimationId() {
     return PlayerAnimationIndices.FireBow;
+  }
+
+  /** V3: the crystal arrow (cache graphic) flies to the target and the bow flashes at launch. */
+  override registerProjectile(from: Unit, to: Unit, bonuses: AttackBonuses, options: ProjectileOptions = {}) {
+    spawnGraphic(from, PLAYER_CACHE_SPOTANIMS.bofaArrowLaunch, 0.7);
+    super.registerProjectile(from, to, bonuses, { ...spotAnimProjectile(PLAYER_CACHE_SPOTANIMS.bofaArrowTravel), ...options });
   }
 }

@@ -9,6 +9,10 @@ export class FallbackModel implements Model {
   private fallbackWasDrawn = false;
   constructor(private primary: Model, private fallback: Model) {}
   getPrimaryModel() { return this.primary; }
+  /** Which model is on screen now: the cache render, the legacy GLBs, or neither until the load settles. */
+  get activeSource(): "cache" | "legacy" | "pending" {
+    return this.active === this.primary ? "cache" : this.active === this.fallback ? "legacy" : "pending";
+  }
   /**
    * Resolve which model to use, exactly once. Prefer the cache-render primary;
    * only fall back to the legacy GLTF models if the primary fails. A fallback

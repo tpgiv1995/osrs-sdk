@@ -1,4 +1,5 @@
-import { PLAYER_CACHE_ITEMS } from "../../assets/PlayerCacheItems";
+import { PLAYER_CACHE_ITEMS, PLAYER_CACHE_SPOTANIMS } from "../../assets/PlayerCacheItems";
+import { spawnGraphic, spotAnimProjectile, v3GraphicsEnabled, withImpact } from "../../sdk/V3Graphics";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 "use strict";
 
@@ -24,8 +25,37 @@ export class EyeOfAyak extends MagicWeapon {
     return PLAYER_CACHE_ITEMS.eyeOfAyak.id;
   }
 
+  /** Normal attack (sequence 12397, 3 ticks) or Soul Rend (sequence 12394, 5 ticks): the cache has both. */
   override get attackAnimationId(): number {
-    return PlayerAnimationIndices.CastStaff;
+    return this.lastSwingWasSpec ? PlayerAnimationIndices.EyeOfAyakSpecial : PlayerAnimationIndices.EyeOfAyakNormal;
+  }
+
+  /**
+   * V3 graphics. Normal attack: a glow on the player, a travelling projectile, an impact on the target. Soul Rend: a
+   * player graphic and an impact on the target, no projectile (RuneLite's Eye of Ayak graphic list has none).
+   */
+  override registerProjectile(from: Unit, to: Unit, bonuses: AttackBonuses, options: ProjectileOptions = {}) {
+    if (bonuses.isSpecialAttack) {
+      spawnGraphic(from, PLAYER_CACHE_SPOTANIMS.ayakSpecialPlayer, 0.7);
+      super.registerProjectile(
+        from,
+        to,
+        bonuses,
+        withImpact({ ...(v3GraphicsEnabled() ? { hidden: true } : {}), ...options }, () =>
+          spawnGraphic(to, PLAYER_CACHE_SPOTANIMS.ayakSpecialImpact, 0),
+        ),
+      );
+      return;
+    }
+    spawnGraphic(from, PLAYER_CACHE_SPOTANIMS.ayakNormalPlayer, 0.7);
+    super.registerProjectile(
+      from,
+      to,
+      bonuses,
+      withImpact({ ...spotAnimProjectile(PLAYER_CACHE_SPOTANIMS.ayakNormalProjectile), ...options }, () =>
+        spawnGraphic(to, PLAYER_CACHE_SPOTANIMS.ayakNormalImpact, 0.5),
+      ),
+    );
   }
 
   /** Set while the swing in flight is Soul Rend, so the next attack delay is 5 ticks. */

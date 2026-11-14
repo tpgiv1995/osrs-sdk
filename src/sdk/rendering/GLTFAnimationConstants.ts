@@ -15,4 +15,6 @@ export enum PlayerAnimationIndices {
   // cache-render poses only (no baked GLTF animation behind these two)
   CastStaff = 12,
   CastBarrage = 13,
+  EyeOfAyakNormal = 14,
+  EyeOfAyakSpecial = 15,
 }

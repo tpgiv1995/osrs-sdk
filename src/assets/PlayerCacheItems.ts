@@ -53,4 +53,23 @@ export const PLAYER_ANIMATION_SEQUENCES: Record<number, number> = {
   11: 390, // sword slash
   12: 1167, // cast (staff)
   13: 1979, // cast (ancient barrage)
+  14: 12397, // Eye of Ayak normal attack (90 cycles = 3 ticks)
+  15: 12394, // Eye of Ayak Soul Rend special (150 cycles = 5 ticks)
 };
+
+/**
+ * Cache spotanim (graphic) ids for the V3 kit's projectiles and impacts. Sources: RuneLite gameval SpotanimID and the
+ * cache's own spotanim definitions (model, sequence and length checked against the weapon's tick speed).
+ */
+export const PLAYER_CACHE_SPOTANIMS = {
+  bofaArrowTravel: 1926, // SP_ATTACK_ARROW_TRAVEL_FAERDHINEN_IORWERTH (item 25886 is the Iorwerth (c) bow)
+  bofaArrowLaunch: 1927, // SP_ATTACK_ARROW_LAUNCH_FAERDHINEN_IORWERTH
+  iceBarrageImpact: 369, // ICE_BARRAGE_IMPACT
+  bloodBarrageImpact: 377, // SPELL_BLOOD_BARRAGE_IMPACT
+  splash: 85, // spell splash (a barrage that does no damage)
+  ayakSpecialPlayer: 3364, // VFX_AYAK_PLAYER_SPECIAL_SPOTANIM
+  ayakSpecialImpact: 3365, // VFX_AYAK_IMPACT_SPECIAL_SPOTANIM
+  ayakNormalPlayer: 3366, // VFX_AYAK_PLAYER_NORMAL_SPOTANIM
+  ayakNormalProjectile: 3367, // VFX_AYAK_NORMAL_PROJECTILE
+  ayakNormalImpact: 3368, // VFX_AYAK_NORMAL_IMPACT
+} as const;

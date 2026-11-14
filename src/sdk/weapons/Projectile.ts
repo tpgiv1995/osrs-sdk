@@ -9,6 +9,8 @@ import { Renderable } from "../Renderable";
 import { Pathing } from "../Pathing";
 import { BasicModel } from "../rendering/BasicModel";
 import { GLTFModel } from "../rendering/GLTFModel";
+import { CacheRenderModel } from "../rendering/CacheRenderModel";
+import { CacheRenderReferences, CacheRenderSpotAnim } from "../rendering/CacheRenderReference";
 import { Settings } from "../Settings";
 import { Viewport } from "../Viewport";
 import { Trainer } from "../Trainer";
@@ -50,6 +52,8 @@ export interface ProjectileOptions {
   // played when the projectile lands
   hitSound?: Sound;
   model?: string;
+  /** A cache spotanim (graphic) drawn as the projectile, e.g. the BowFa crystal arrow. */
+  spotAnim?: CacheRenderSpotAnim;
   modelScale?: number;
   // if there are multiple models
   models?: string[];
@@ -168,7 +172,21 @@ export class Projectile extends Renderable {
     } else {
       this.interpolator = new LinearProjectileMotionInterpolator();
     }
+
+    if (Projectile.debugLogging) {
+      const unit = from as unknown as { mobName?: () => unknown; isPlayer?: boolean };
+      Projectile.debugLog.push({
+        from: unit.isPlayer ? "player" : String(unit.mobName ? unit.mobName() : "unit"),
+        style: attackStyle,
+        source: this.modelSource,
+        ticks: this.totalDelay,
+      });
+    }
   }
+
+  /** Debug-only record of every projectile created (the browser smoke test reads it). */
+  static debugLogging = false;
+  static debugLog: { from: string; style: string; source: string; ticks: number }[] = [];
 
   private isMeleeStyle() {
     return this.attackStyle === "slash" || this.attackStyle === "crush" || this.attackStyle === "stab";
@@ -339,10 +357,28 @@ export class Projectile extends Renderable {
     if (this.options.models) {
       return GLTFModel.forRenderableMulti(this, this.options.models, { scale: this.options.modelScale });
     }
+    if (this.options.spotAnim) {
+      // Projectile spotanims are directional cache models whose basis matches actor models, so the projectile's
+      // computed yaw points the model at its target.
+      return CacheRenderModel.forRenderable(this, CacheRenderReferences.spotAnim([this.options.spotAnim]), {
+        basisRotation: Math.PI / 2,
+      });
+    }
     if (this.options.model) {
       return GLTFModel.forRenderable(this, this.options.model, { scale: this.options.modelScale });
     }
     return BasicModel.sphereForRenderable(this);
+  }
+
+  /**
+   * Where this projectile's picture comes from: "cache" (spotanim), "gltf" (a baked model), "sphere" (the generic
+   * coloured-ball fallback) or "none" (hidden). Tests and the browser smoke test assert on it.
+   */
+  get modelSource(): "cache" | "gltf" | "sphere" | "none" {
+    if (this.options.hidden || !this.attackStyle || this.color === "#000000") return "none";
+    if (this.options.spotAnim) return "cache";
+    if (this.options.models || this.options.model) return "gltf";
+    return "sphere";
   }
 
   get animationIndex() {
