@@ -38,13 +38,21 @@ export class DivineRangingPotion extends Potion {
   }
 
   /**
-   * Divine ranging potion: Ranged +4 and +10%, costs 10% of Hitpoints, and holds the boost at full strength for
-   * 5 minutes (500 ticks): a Saradomin brew's Ranged drain cannot pull it below the boosted level meanwhile.
+   * Divine ranging potion: Ranged +4 and +10%, costs 10 Hitpoints (needs more than 10), and the boost does not
+   * decay for 5 minutes (500 ticks), then Ranged drops back to base. A Saradomin brew still drains Ranged
+   * normally; drinking again in the window re-boosts to 112 and restarts the 5 minutes.
    */
+  inventoryLeftClick(player: Player) {
+    if (player.currentStats.hitpoint <= Math.round(player.stats.hitpoint * 0.1)) {
+      return; // not enough Hitpoints to drink it
+    }
+    super.inventoryLeftClick(player);
+  }
+
   drink(player: Player) {
     super.drink(player);
     const boosted = player.stats.range + Math.floor(player.stats.range * 0.1) + 4;
-    player.currentStats.range = Math.max(player.currentStats.range, boosted);
+    player.currentStats.range = boosted; // a re-drink after a brew restores the full boost
     player.holdStat("range", boosted, 500);
     const cost = Math.round(player.stats.hitpoint * 0.1);
     player.currentStats.hitpoint = Math.max(1, player.currentStats.hitpoint - cost);

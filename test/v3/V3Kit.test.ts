@@ -302,22 +302,51 @@ describe("V3 Inferno kit: calculator parity", () => {
     expect(player.currentStats.defence).toBe(118);
   });
 
-  test("Divine ranging potion: Ranged 112, costs 10 HP, holds through a Saradomin brew for 5 minutes", () => {
+  test("Divine ranging potion: Ranged 112, costs 10 HP, no decay for 5 minutes, then back to base", () => {
     const { player } = makePlayer();
     new DivineRangingPotion().drink(player);
     expect(player.currentStats.range).toBe(112);
     expect(player.currentStats.hitpoint).toBe(89);
-    new SaradominBrew().drink(player);
-    expect(player.currentStats.range).toBe(112); // the brew's drain cannot pull it below the held level
-    expect(player.currentStats.defence).toBeGreaterThan(99);
     for (let i = 0; i < 499; i++) player.v3Tick();
     expect(player.currentStats.range).toBe(112);
     player.v3Tick();
     expect(player.currentStats.range).toBe(99);
-    // a plain brew with no divine potion does drain Ranged
-    const other = makePlayer().player;
-    new SaradominBrew().drink(other);
-    expect(other.currentStats.range).toBe(99 - (Math.floor(99 * 0.1) + 2));
+  });
+
+  test("Divine ranging potion: a Saradomin brew still drains Ranged (112 to 99), a re-drink restores 112 and restarts the timer", () => {
+    const { player } = makePlayer();
+    const divine = new DivineRangingPotion();
+    divine.drink(player);
+    new SaradominBrew().drink(player);
+    expect(player.currentStats.range).toBe(112 - (Math.floor(112 * 0.1) + 2));
+    expect(player.currentStats.range).toBe(99);
+    for (let i = 0; i < 300; i++) player.v3Tick();
+    divine.drink(player);
+    expect(player.currentStats.range).toBe(112);
+    // 300 ticks into the first window; the re-drink restarted it, so 499 more ticks still hold
+    for (let i = 0; i < 499; i++) player.v3Tick();
+    expect(player.currentStats.range).toBe(112);
+    player.v3Tick();
+    expect(player.currentStats.range).toBe(99);
+  });
+
+  test("Divine ranging potion: needs more than 10 HP to drink", () => {
+    const { player } = makePlayer();
+    player.currentStats.hitpoint = 10;
+    const potion = new DivineRangingPotion();
+    player.inventory[0] = potion;
+    potion.inventoryLeftClick(player);
+    expect(potion.doses).toBe(4);
+    expect(player.currentStats.range).toBe(99);
+    player.currentStats.hitpoint = 11;
+    potion.inventoryLeftClick(player);
+    expect(potion.doses).toBe(3);
+  });
+
+  test("a brew with no divine potion drains Ranged normally", () => {
+    const { player } = makePlayer();
+    new SaradominBrew().drink(player);
+    expect(player.currentStats.range).toBe(99 - (Math.floor(99 * 0.1) + 2));
   });
 
   test("Prayer regeneration potion: one point every 12 ticks, 800 ticks per dose", () => {

@@ -850,7 +850,10 @@ export class Player extends Unit {
     return true;
   }
 
-  /** Divine potions: a stat held at its boosted level until the expiry tick (drains cannot lower it). */
+  /**
+   * Divine potions: the boost does not decay for 5 minutes, then the stat drops back to base. Other drains (a
+   * Saradomin brew) still lower it normally, and drinking again re-boosts and restarts the 5 minutes.
+   */
   heldStats: { [stat: string]: { level: number; expires: number } } = {};
 
   holdStat(stat: "attack" | "strength" | "defence" | "range" | "magic", level: number, ticks: number) {
@@ -863,8 +866,6 @@ export class Player extends Unit {
       if (this.v3TickCount >= held.expires) {
         this.currentStats[stat] = Math.min(this.currentStats[stat], this.stats[stat]);
         delete this.heldStats[stat];
-      } else if (this.currentStats[stat] < held.level) {
-        this.currentStats[stat] = held.level;
       }
     });
   }
