@@ -116,6 +116,11 @@ export class Weapon extends Equipment {
     if (neededInventorySlots > openInventorySlots.length) {
       return;
     }
+    // A two-hander swaps the weapon into its own slot, but the worn offhand needs a second free slot.
+    // Without this a full inventory silently lost the offhand.
+    if (this.isTwoHander && currentWeapon && currentOffhand && openInventorySlots.length < 2) {
+      return;
+    }
     this.assignToPlayer(player);
     if (currentWeapon) {
       player.inventory[openInventorySlots.shift()] = currentWeapon;
