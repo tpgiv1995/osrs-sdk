@@ -4,6 +4,7 @@ import { AttackBonuses, Weapon } from "../gear/Weapon";
 import { EquipmentTypes } from "../Equipment";
 import { AttackStylesController } from "../AttackStylesController";
 import { PrayerGroups } from "../BasePrayer";
+import { V3Rules, fac, prayerFactor, playerDefenceRoll, playerStanceDefenceBonus, mulFloor } from "../V3Rules";
 
 export class RangedWeapon extends Weapon {
   get type() {
@@ -57,6 +58,14 @@ export class RangedWeapon extends Weapon {
   }
 
   _rangedAttack(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      const factor = prayerFactor(bonuses.effectivePrayers.range).racc || 100;
+      // players add 8 to the effective level, monsters 9 (wiki NPCVsPlayerCalc)
+      return (
+        (fac(from.currentStats.range, factor) + (bonuses.isAccurate ? 3 : 0) + (from.type === UnitTypes.MOB ? 9 : 8)) *
+        (bonuses.voidMultiplier || 1)
+      );
+    }
     let prayerMultiplier = 1;
     const rangePrayer = bonuses.effectivePrayers.range;
 
@@ -79,6 +88,15 @@ export class RangedWeapon extends Weapon {
   }
 
   _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      const factor = prayerFactor(bonuses.effectivePrayers.range).rstr || 100;
+      const effective =
+        (fac(from.currentStats.range, factor) + (bonuses.isAccurate ? 3 : 0) + 8) * (bonuses.voidMultiplier || 1);
+      const base = Math.floor(
+        (Math.floor(effective) * (from.bonuses.other.rangedStrength + 64) + 320) / 640,
+      );
+      return mulFloor(Math.floor(base * bonuses.gearRangeMultiplier), this._damageMultiplier(from, to, bonuses));
+    }
     let prayerMultiplier = 1;
     const rangePrayer = bonuses.effectivePrayers.range;
     if (rangePrayer) {
@@ -104,6 +122,12 @@ export class RangedWeapon extends Weapon {
   }
 
   _attackRoll(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      const roll = Math.floor(
+        this._rangedAttack(from, to, bonuses) * (from.bonuses.attack.range + 64) * bonuses.gearRangeMultiplier,
+      );
+      return mulFloor(roll, this._accuracyMultiplier(from, to, bonuses));
+    }
     return Math.floor(
       Math.floor(
         this._rangedAttack(from, to, bonuses) * (from.bonuses.attack.range + 64) * bonuses.gearRangeMultiplier,
@@ -112,6 +136,12 @@ export class RangedWeapon extends Weapon {
   }
 
   _defenceRoll(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      if (to.type === UnitTypes.PLAYER) {
+        return playerDefenceRoll(to, "range", playerStanceDefenceBonus(to));
+      }
+      return (to.currentStats.defence + 9) * (to.bonuses.defence.range + 64);
+    }
     let prayerMultiplier = 1;
     const defencePrayer = bonuses.effectivePrayers.defence;
 

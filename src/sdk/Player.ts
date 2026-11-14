@@ -20,6 +20,8 @@ import { PrayerController } from "./PrayerController";
 import { Region } from "./Region";
 import { SetEffect } from "./SetEffect";
 import { Settings } from "./Settings";
+import { V3Rules } from "./V3Rules";
+import { AttackStyle } from "./AttackStylesController";
 import { Unit, UnitBonuses, UnitOptions, UnitTypes } from "./Unit";
 import { Sound } from "./utils/SoundCache";
 import { XpDrop, XpDropAggregator } from "./XpDrop";
@@ -384,6 +386,9 @@ export class Player extends Unit {
           this.useSpecialAttack = false;
         } else {
           const bonuses: AttackBonuses = {};
+          if (V3Rules.calculator && this.equipment.weapon.attackStyleCategory()) {
+            bonuses.isAccurate = this.equipment.weapon.attackStyle() === AttackStyle.ACCURATE;
+          }
           if (this.equipment.helmet && this.equipment.helmet.itemName === ItemName.SLAYER_HELMET_I) {
             bonuses.gearMeleeMultiplier = 7 / 6;
             bonuses.gearRangeMultiplier = 1.15;
@@ -815,6 +820,58 @@ export class Player extends Unit {
 
   pretick() {
     this.prayerController.tick(this);
+    this.v3Tick();
+  }
+
+  // --- V3 Inferno Sim timers: Saturated heart, Prayer regeneration
+  v3TickCount = 0;
+  saturatedHeart: { level: number; expires: number } | null = null;
+  saturatedHeartCooldownUntil = 0;
+  prayerRegenTicksLeft = 0;
+
+  /** True while the Saturated heart is on cooldown (5 minutes from the use, 500 ticks). */
+  get saturatedHeartOnCooldown(): boolean {
+    return this.v3TickCount < this.saturatedHeartCooldownUntil;
+  }
+
+  /**
+   * Saturated heart: +4 and +10% Magic for 5 minutes, and the boost does not decay. Anything that drags Magic
+   * below the boosted level (a Saradomin brew) cancels it. Returns false while it is on cooldown.
+   */
+  useSaturatedHeart(): boolean {
+    if (this.saturatedHeartOnCooldown) {
+      return false;
+    }
+    const base = this.stats.magic;
+    const boosted = base + 4 + Math.floor(base * 0.1);
+    this.currentStats.magic = Math.max(this.currentStats.magic, boosted);
+    this.saturatedHeart = { level: boosted, expires: this.v3TickCount + 500 };
+    this.saturatedHeartCooldownUntil = this.v3TickCount + 500;
+    return true;
+  }
+
+  /** Cancel the heart if a drain pulled Magic below its level, end it when the 5 minutes are up. */
+  v3CheckHeart() {
+    if (!this.saturatedHeart) {
+      return;
+    }
+    if (this.currentStats.magic < this.saturatedHeart.level) {
+      this.saturatedHeart = null;
+    } else if (this.v3TickCount >= this.saturatedHeart.expires) {
+      this.currentStats.magic = Math.min(this.currentStats.magic, this.stats.magic);
+      this.saturatedHeart = null;
+    }
+  }
+
+  v3Tick() {
+    this.v3TickCount++;
+    this.v3CheckHeart();
+    if (this.prayerRegenTicksLeft > 0) {
+      this.prayerRegenTicksLeft--;
+      if (this.prayerRegenTicksLeft % 12 === 0) {
+        this.currentStats.prayer = Math.min(this.stats.prayer, this.currentStats.prayer + 1);
+      }
+    }
   }
 
   override attackStep() {

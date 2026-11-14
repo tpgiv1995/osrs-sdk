@@ -1,5 +1,6 @@
 import { AttackStylesController } from "../AttackStylesController";
 import { PrayerGroups } from "../BasePrayer";
+import { V3Rules, playerDefenceRoll, playerStanceDefenceBonus } from "../V3Rules";
 import { EquipmentTypes } from "../Equipment";
 import { Weapon, AttackBonuses } from "../gear/Weapon";
 import { Unit, UnitTypes } from "../Unit";
@@ -120,14 +121,19 @@ export class MeleeWeapon extends Weapon {
   }
 
   _attackRoll(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    // monsters use level + 9 where the player formulas use + 8 (wiki NPCVsPlayerCalc)
+    const monsterBonus = V3Rules.calculator && from.type === UnitTypes.MOB ? 1 : 0;
     return Math.floor(
-      this._attackLevel(from, to, bonuses) *
+      (this._attackLevel(from, to, bonuses) + monsterBonus) *
         (from.bonuses.attack[bonuses.attackStyle] + 64) *
         bonuses.gearMeleeMultiplier,
     );
   }
 
   _defenceRoll(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator && to.type === UnitTypes.PLAYER) {
+      return playerDefenceRoll(to, bonuses.attackStyle as "stab" | "slash" | "crush", playerStanceDefenceBonus(to));
+    }
     if (to.type === UnitTypes.MOB || to.type === UnitTypes.ENTITY) {
       return (to.currentStats.defence + 9) * (to.bonuses.defence[bonuses.attackStyle] + 64);
     } else {

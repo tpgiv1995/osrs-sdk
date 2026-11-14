@@ -72,6 +72,9 @@ export class SaradominBrew extends Potion {
     const magicNerf = Math.floor(player.currentStats.magic * 0.1) + 2;
     player.currentStats.magic -= magicNerf;
     player.currentStats.magic = Math.max(1, Math.min(player.currentStats.magic, player.stats.magic + magicNerf));
+
+    // The Magic drain cancels an active Saturated heart.
+    player.v3CheckHeart();
   }
 
   updateInventorySprite() {

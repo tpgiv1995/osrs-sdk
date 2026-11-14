@@ -14,6 +14,7 @@ import { Random } from "../Random";
 import { Sound } from "../utils/SoundCache";
 import { PlayerAnimationIndices } from "../rendering/GLTFAnimationConstants";
 import { XpDrop } from "../XpDrop";
+import { V3Rules, stdRoll } from "../V3Rules";
 
 interface EffectivePrayers {
   magic?: BasePrayer;
@@ -213,9 +214,17 @@ export class Weapon extends Equipment {
   _hitChance(from: Unit, to: Unit, bonuses: AttackBonuses) {
     const attackRoll = this._attackRoll(from, to, bonuses);
     const defenceRoll = this._defenceRoll(from, to, bonuses);
+    if (V3Rules.calculator) {
+      return this._v3HitChance(from, to, attackRoll, defenceRoll, bonuses);
+    }
     const hitChance =
       attackRoll > defenceRoll ? 1 - (defenceRoll + 2) / (2 * attackRoll + 1) : attackRoll / (2 * defenceRoll + 1);
     return hitChance;
+  }
+
+  /** Wiki DPS calculator hit chance. Weapons with a re-roll rule (Confliction gauntlets) override this. */
+  _v3HitChance(from: Unit, to: Unit, attackRoll: number, defenceRoll: number, bonuses: AttackBonuses) {
+    return stdRoll(attackRoll, defenceRoll);
   }
 
   isBlockable(from: Unit, to: Unit, bonuses: AttackBonuses): boolean {

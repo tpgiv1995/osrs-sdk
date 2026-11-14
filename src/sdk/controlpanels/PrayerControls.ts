@@ -31,7 +31,8 @@ export class PrayerControls extends BaseControls {
   slotPrayers(): (BasePrayer | null)[] {
     const prayers = Trainer.player.prayerController.prayers;
     const layout = Settings.prayerLayout;
-    if (!isValidPrayerLayout(layout)) return prayers;
+    // The stock panel has 29 drawn slots; Mystic Vigour and Deadeye (appended) only exist in custom layouts.
+    if (!isValidPrayerLayout(layout)) return prayers.slice(0, 29);
     return layout.map((name) => (name ? prayers.find((prayer) => prayer.name === name) ?? null : null));
   }
 

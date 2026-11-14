@@ -3,6 +3,7 @@
 
 export * from './LineOfSight';
 export * from './Pathing';
+export * from './V3Rules';
 export * from './Collision';
 
 export * from './Entity';

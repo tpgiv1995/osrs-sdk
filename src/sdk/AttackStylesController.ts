@@ -128,6 +128,10 @@ export class AttackStylesController {
       [AttackStyle.DEFENSIVE]: ImageLoader.createImage(StaffDefensiveImage),
       [AttackStyle.AUTOCAST]: ImageLoader.createImage(StaffDefensiveImage),
     },
+    [AttackStyleTypes.POWEREDSTAFF]: {
+      [AttackStyle.ACCURATE]: ImageLoader.createImage(StaffAccurateImage),
+      [AttackStyle.LONGRANGE]: ImageLoader.createImage(StaffDefensiveImage),
+    },
     [AttackStyleTypes.THROWN]: {
       [AttackStyle.ACCURATE]: ImageLoader.createImage(ThrownAccurateImage),
       [AttackStyle.RAPID]: ImageLoader.createImage(ThrownRapidImage),

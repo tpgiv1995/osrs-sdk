@@ -17,6 +17,16 @@ export const V3_PRAYER_LAYOUT: PrayerLayout = [
   "", "", "Incredible Reflexes", "Ultimate Strength", "",
 ];
 
+/** The V3 Inferno Sim book: Mystic Vigour takes Augury's slot, Deadeye and Mystic Might sit beside it, Eagle Eye stays. */
+export const V3_INFERNO_PRAYER_LAYOUT: PrayerLayout = [
+  "Protect from Range", "Mystic Vigour", "Deadeye", "Mystic Might", "",
+  "Protect from Magic", "Eagle Eye", "Steel Skin", "", "Rapid Heal",
+  "Protect from Melee", "Piety", "", "", "Rapid Restore",
+  "", "", "", "", "Retribution",
+  "", "", "Protect Item", "Redemption", "Smite",
+  "", "", "Incredible Reflexes", "Ultimate Strength", "",
+];
+
 export function isValidPrayerLayout(layout: unknown): layout is PrayerLayout {
   return Array.isArray(layout)
     && layout.length === PRAYER_LAYOUT_COLUMNS * PRAYER_LAYOUT_ROWS

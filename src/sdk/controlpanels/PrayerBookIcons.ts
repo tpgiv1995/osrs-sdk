@@ -27,6 +27,8 @@ import Chivalry from "../../assets/images/prayers/book/Chivalry.png";
 import Piety from "../../assets/images/prayers/book/Piety.png";
 import Rigour from "../../assets/images/prayers/book/Rigour.png";
 import Augury from "../../assets/images/prayers/book/Augury.png";
+import MysticVigour from "../../assets/images/prayers/book/MysticVigour.png";
+import Deadeye from "../../assets/images/prayers/book/Deadeye.png";
 
 /**
  * Prayer book icons cut from the stock panel image, keyed by the prayer's display
@@ -62,4 +64,6 @@ export const PRAYER_BOOK_ICONS: Record<string, string> = {
   "Piety": Piety,
   "Rigour": Rigour,
   "Augury": Augury,
+  "Mystic Vigour": MysticVigour,
+  "Deadeye": Deadeye,
 };

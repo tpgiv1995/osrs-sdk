@@ -1,5 +1,7 @@
 import { filter, find, intersection } from "lodash";
 import { Augury } from "../content/prayers/Augury";
+import { Deadeye } from "../content/prayers/Deadeye";
+import { MysticVigour } from "../content/prayers/MysticVigour";
 import { BurstOfStrength } from "../content/prayers/BurstOfStrength";
 import { Chivalry } from "../content/prayers/Chivalry";
 import { ClarityOfThought } from "../content/prayers/ClarityOfThought";
@@ -139,5 +141,7 @@ export class PrayerController {
     new Piety(),
     new Rigour(),
     new Augury(),
+    new MysticVigour(),
+    new Deadeye(),
   ];
 }

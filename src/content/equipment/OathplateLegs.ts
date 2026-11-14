@@ -1,0 +1,29 @@
+import { ImageLoader } from "../../sdk/utils/ImageLoader";
+import InventImage from "../../assets/images/equipment/Oathplate_legs.png";
+import { Legs } from "../../sdk/gear/Legs";
+import { ItemName } from "../../sdk/ItemName";
+
+/** V3 Inferno kit item. Stats are the OSRS Wiki values the calculator (tools/inferno_gear.py) reads. */
+export class OathplateLegs extends Legs {
+  inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
+
+  get inventoryImage() {
+    return InventImage;
+  }
+  get itemName(): ItemName {
+    return ItemName.OATHPLATE_LEGS;
+  }
+  get weight(): number {
+    return 7.0;
+  }
+
+  constructor() {
+    super();
+    this.bonuses = {
+      attack: { stab: 0, slash: 12, crush: 0, magic: -12, range: -14 },
+      defence: { stab: 75, slash: 100, crush: 73, magic: -3, range: 81 },
+      other: { meleeStrength: 2, rangedStrength: 0, magicDamage: 0.0, prayer: 0 },
+      targetSpecific: { undead: 0, slayer: 0 },
+    };
+  }
+}

@@ -4,6 +4,7 @@ import { ProjectileOptions } from "./Projectile";
 import { AttackBonuses, Weapon } from "../gear/Weapon";
 import { EquipmentTypes } from "../Equipment";
 import { PrayerGroups } from "../BasePrayer";
+import { V3Rules, mulFloor, fac, fangRoll, stdRoll, prayerFactor, playerDefenceRoll, playerStanceDefenceBonus, conflictionActive, conflictionIsArmed, setConflictionArmed } from "../V3Rules";
 
 export class MagicWeapon extends Weapon {
 
@@ -52,7 +53,26 @@ export class MagicWeapon extends Weapon {
     }
   }
 
+  _v3HitChance(from: Unit, to: Unit, attackRoll: number, defenceRoll: number, bonuses: AttackBonuses) {
+    if (conflictionActive(from) && conflictionIsArmed(to)) {
+      return fangRoll(attackRoll, defenceRoll);
+    }
+    return stdRoll(attackRoll, defenceRoll);
+  }
+
+  _rollAttack(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    const damage = super._rollAttack(from, to, bonuses);
+    if (V3Rules.calculator && conflictionActive(from)) {
+      setConflictionArmed(to, !this.lastHitHit);
+    }
+    return damage;
+  }
+
   _magicLevel(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      const factor = prayerFactor(bonuses.effectivePrayers.magic).acc || 100;
+      return fac(from.currentStats.magic, factor) * (bonuses.voidMultiplier || 1) + (bonuses.isAccurate ? 2 : 0) + 9;
+    }
     let prayerMultiplier = 1;
     const magicPrayer = bonuses.effectivePrayers.magic;
 
@@ -79,6 +99,10 @@ export class MagicWeapon extends Weapon {
   }
 
   _magicDamageBonusMultiplier(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      const prayerTenths = prayerFactor(bonuses.effectivePrayers.magic).mdmgTenths || 0;
+      return from.bonuses.other.magicDamage + prayerTenths / 1000;
+    }
     return from.bonuses.other.magicDamage;
   }
 
@@ -89,6 +113,13 @@ export class MagicWeapon extends Weapon {
   }
 
   _defenceRoll(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      if (to.type === UnitTypes.PLAYER) {
+        return playerDefenceRoll(to, "magic", playerStanceDefenceBonus(to));
+      }
+      const mdef = Math.max(0, to.bonuses.defence.magic - (to.magicDefReduction || 0));
+      return (to.currentStats.magic + 9) * (mdef + 64);
+    }
     let prayerMultiplier = 1;
     const defencePrayer = bonuses.effectivePrayers.defence;
 
@@ -120,6 +151,9 @@ export class MagicWeapon extends Weapon {
   }
 
   _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses) {
+    if (V3Rules.calculator) {
+      return mulFloor(this._baseSpellDamage(from, to, bonuses), this._magicDamageBonusMultiplier(from, to, bonuses));
+    }
     return Math.floor(this._baseSpellDamage(from, to, bonuses) * this._magicDamageBonusMultiplier(from, to, bonuses));
     // TODO: Most of this isn't implemented
     // Spell Base damage +3 if casting bolt spells with chaos gauntlets

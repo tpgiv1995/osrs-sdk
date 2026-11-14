@@ -113,6 +113,8 @@ export abstract class Unit extends Renderable {
   lastRotation = 0;
   hasDiedAndAwaitingRemoval = false;
   nulledTicks = 0;
+  /** Magic defence bonus removed by Eye of Ayak's Soul Rend (V3 Inferno Sim). */
+  magicDefReduction = 0;
   
   overheadText: string | null = null;
   overheadTextTimer = 0;

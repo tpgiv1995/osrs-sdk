@@ -2,6 +2,7 @@ import { Necklace } from "../../sdk/gear/Necklace";
 import { ImageLoader } from "../../sdk/utils/ImageLoader";
 import InventImage from "../../assets/images/equipment/Occult_necklace.png";
 import { ItemName } from "../../sdk/ItemName";
+import { V3Rules } from "../../sdk/V3Rules";
 
 export class OccultNecklace extends Necklace {
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
@@ -36,8 +37,9 @@ export class OccultNecklace extends Necklace {
       other: {
         meleeStrength: 0,
         rangedStrength: 0,
-        magicDamage: 0.1,
-        prayer: 0,
+        // V3 rules use the wiki bucket value the calculator reads (5%); upstream's 10% stays for legacy parity.
+        magicDamage: V3Rules.calculator ? 0.05 : 0.1,
+        prayer: V3Rules.calculator ? 2 : 0, // wiki value; upstream had 0
       },
       targetSpecific: {
         undead: 0,

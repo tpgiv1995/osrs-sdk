@@ -7,6 +7,16 @@ import { Viewport } from "../../src/sdk/Viewport";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import { TestNpc } from "../../src/sdk/testing/TestNpc";
 import { Settings } from "../../src";
+import { V3Rules } from "../../src/sdk/V3Rules";
+
+// This scenario is upstream's own; its numbers come from upstream's formulas, so it runs in legacy mode.
+// The calculator rules have their own tests (test/v3).
+beforeAll(() => {
+  V3Rules.calculator = false;
+});
+afterAll(() => {
+  V3Rules.calculator = true;
+});
 
 describe("basic combat scenario", () => {
   test("when player tries to kill a fake jalxil...", () => {
